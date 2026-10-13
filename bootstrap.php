@@ -32,27 +32,32 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
         /**
          * Register an EPM version candidate and product namespace.
          *
-         * @param string $version   EPM version.
-         * @param string $namespace Product namespace.
-         * @param string $epm_path  Path to the product's EPM directory.
+         * @param string $version      EPM version.
+         * @param string $namespace    Product namespace.
+         * @param string $epm_path     Path to the product's EPM directory.
+         * @param string $product_path Path to the product's src directory.
          *
          * @return void
          */
         public static function register(
             string $version,
             string $namespace,
-            string $epm_path
+            string $epm_path,
+            string $product_path
         ): void {
             if ( self::$initialized ) {
                 return;
             }
 
-            $namespace = trim( $namespace, '\\' ) . '\\';
-            $epm_path  = realpath( $epm_path );
+            $namespace    = trim( $namespace, '\\' ) . '\\';
+            $epm_path     = realpath( $epm_path );
+            $product_path = realpath( $product_path );
 
             if (
                 false === $epm_path
+                || false === $product_path
                 || ! is_dir( $epm_path . '/src' )
+                || ! is_dir( $product_path )
                 || ! preg_match(
                     '/^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$/',
                     $version
@@ -67,12 +72,7 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
                 'path'    => $epm_path,
             );
 
-            $product_path = dirname( $epm_path );
-            $product_src  = $product_path . '/src';
-
-            if ( is_dir( $product_src ) ) {
-                self::$products[ $namespace ] = $product_src;
-            }
+            self::$products[ $namespace ] = $product_path;
 
             if ( self::$hook_registered ) {
                 return;
@@ -165,11 +165,15 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
 /*
  * Register the loader from the product's main plugin file, not here.
  *
- * Example (assuming EPM is included from the plugin's /epm directory):
+ * Keep the product directories named /epm and /src.
+ * Pass both paths explicitly; the loader does not infer one from the other.
+ *
+ * Example (in the main plugin file):
  *
  * EpmLoader::register(
  *     '1.4.0',
  *     'Ephpicman\\MyPlugin\\',
- *     __DIR__ . '/epm'
+ *     __DIR__ . '/epm',
+ *     __DIR__ . '/src'
  * );
  */
