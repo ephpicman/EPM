@@ -83,4 +83,13 @@ final class App {
 	public function run(): void {
 		// Application orchestration will be implemented here.
 	}
+
+	/**
+	 * Terminate the application request.
+	 *
+	 * @return void
+	 */
+	public function terminate(): void {
+		// Final request handling will be implemented here.
+	}
 }
