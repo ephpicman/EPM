@@ -34,24 +34,28 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
          *
          * @param string $version      EPM version.
          * @param string $namespace    Product namespace.
-         * @param string $epm_path     Path to the product's EPM directory.
-         * @param string $product_path Path to the product's src directory.
+         * @param string $plugin_path Path to the product's root directory.
          *
          * @return void
          */
         public static function register(
             string $version,
             string $namespace,
-            string $epm_path,
-            string $product_path
+            string $plugin_path
         ): void {
             if ( self::$initialized ) {
                 return;
             }
 
-            $namespace    = trim( $namespace, '\\' ) . '\\';
-            $epm_path     = realpath( $epm_path );
-            $product_path = realpath( $product_path );
+            $namespace   = trim( $namespace, '\\' ) . '\\';
+            $plugin_path = realpath( $plugin_path );
+
+            if ( false === $plugin_path ) {
+                return;
+            }
+
+            $epm_path     = realpath( $plugin_path . '/epm' );
+            $product_path = realpath( $plugin_path . '/src' );
 
             if (
                 false === $epm_path
@@ -165,15 +169,14 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
 /*
  * Register the loader from the product's main plugin file, not here.
  *
- * Keep the product directories named /epm and /src.
- * Pass both paths explicitly; the loader does not infer one from the other.
+ * The product must keep its directories named /epm and /src.
+ * Pass only the product root path; the loader resolves both directories internally.
  *
  * Example (in the main plugin file):
  *
  * EpmLoader::register(
  *     '1.4.0',
  *     'Ephpicman\\MyPlugin\\',
- *     __DIR__ . '/epm',
- *     __DIR__ . '/src'
+ *     __DIR__
  * );
  */
