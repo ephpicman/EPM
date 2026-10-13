@@ -54,7 +54,7 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
                 false === $epm_path
                 || ! is_dir( $epm_path . '/src' )
                 || ! preg_match(
-                    '/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/',
+                    '/^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$/',
                     $version
                 )
                 || '' === $namespace
@@ -162,8 +162,14 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
     }
 }
 
-EpmLoader::register(
-    '1.4.0',
-    'Ephpicman\\MyPlugin\\',
-    __DIR__
-);
+/*
+ * Register the loader from the product's main plugin file, not here.
+ *
+ * Example (assuming EPM is included from the plugin's /epm directory):
+ *
+ * EpmLoader::register(
+ *     '1.4.0',
+ *     'Ephpicman\\MyPlugin\\',
+ *     __DIR__ . '/epm'
+ * );
+ */
