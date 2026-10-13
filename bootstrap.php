@@ -164,6 +164,10 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
             }
         }
     }
+
+    add_action( 'wp_loaded', static function (): void {
+        EPM\App::get_instance()->run();
+    } );
 }
 
 /*
