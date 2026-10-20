@@ -317,7 +317,7 @@ class MetaQuery {
 		$boolean = 'OR' === strtoupper( $boolean ) ? 'OR' : 'AND';
 
 		if ( empty( $this->query ) ) {
-			$this->query = $clause;
+			$this->query = array( $clause );
 			return $this;
 		}
 
