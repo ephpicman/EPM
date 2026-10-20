@@ -27,14 +27,19 @@ class UsersModel {
 	/** @var \WP_User|null Wrapped WordPress user. */
 	private ?\WP_User $user = null;
 
+	/** @var string[] User-meta keys explicitly selected by the query. */
+	private array $selectedMetaFields = array();
+
 	/**
 	 * Create a query facade or wrap an existing WordPress user.
 	 *
-	 * @param \WP_User|null $user Optional WordPress user entity.
+	 * @param \WP_User|null $user              Optional WordPress user entity.
+	 * @param string[]       $selectedMetaFields Metadata keys selected by the query.
 	 */
-	private function __construct( ?\WP_User $user = null ) {
+	private function __construct( ?\WP_User $user = null, array $selectedMetaFields = array() ) {
 		if ( $user instanceof \WP_User ) {
-			$this->user = $user;
+			$this->user               = $user;
+			$this->selectedMetaFields = $selectedMetaFields;
 			return;
 		}
 
@@ -113,8 +118,12 @@ class UsersModel {
 		$results = $this->query->get();
 		$models  = array();
 
+		$selectedMetaFields = $this->query->getSelectedMetaFields();
+
 		foreach ( $results as $result ) {
-			$models[] = $result instanceof \WP_User ? new self( $result ) : $result;
+			$models[] = $result instanceof \WP_User
+				? new self( $result, $selectedMetaFields )
+				: $result;
 		}
 
 		return $models;
@@ -132,10 +141,16 @@ class UsersModel {
 		$args['number'] = 1;
 		$args['offset'] = 0;
 
+		if ( null !== ( $args['fields'] ?? null ) ) {
+			$args['fields'] = 'all';
+		}
+
 		$query  = new \WP_User_Query( $args );
 		$result = $query->get_results()[0] ?? null;
 
-		return $result instanceof \WP_User ? new self( $result ) : $result;
+		return $result instanceof \WP_User
+			? new self( $result, $this->query->getSelectedMetaFields() )
+			: $result;
 	}
 
 	/**
@@ -280,6 +295,10 @@ class UsersModel {
 	public function __get( string $name ) {
 		$this->assert_entity();
 
+		if ( in_array( $name, $this->selectedMetaFields, true ) ) {
+			return get_user_meta( $this->user->ID, $name, true );
+		}
+
 		return $this->user->$name ?? null;
 	}
 
@@ -290,7 +309,15 @@ class UsersModel {
 	 * @return bool
 	 */
 	public function __isset( string $name ): bool {
-		return $this->user instanceof \WP_User && isset( $this->user->$name );
+		if ( ! $this->user instanceof \WP_User ) {
+			return false;
+		}
+
+		if ( in_array( $name, $this->selectedMetaFields, true ) ) {
+			return metadata_exists( 'user', $this->user->ID, $name );
+		}
+
+		return isset( $this->user->$name );
 	}
 
 	/**
