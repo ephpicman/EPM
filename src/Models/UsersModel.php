@@ -7,9 +7,9 @@
  * @package EPM
  */
 
-namespace EPM\\Models;
+namespace EPM\Models;
 
-use EPM\\WordPress\\UserQuery;
+use EPM\WordPress\UserQuery;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -24,16 +24,16 @@ class UsersModel {
 	/** @var UserQuery|null Query builder; null when this instance wraps a user. */
 	private ?UserQuery $query = null;
 
-	/** @var \\WP_User|null Wrapped WordPress user. */
-	private ?\\WP_User $user = null;
+	/** @var \WP_User|null Wrapped WordPress user. */
+	private ?\WP_User $user = null;
 
 	/**
 	 * Create a query facade or wrap an existing WordPress user.
 	 *
-	 * @param \\WP_User|null $user Optional WordPress user entity.
+	 * @param \WP_User|null $user Optional WordPress user entity.
 	 */
-	private function __construct( ?\\WP_User $user = null ) {
-		if ( $user instanceof \\WP_User ) {
+	private function __construct( ?\WP_User $user = null ) {
+		if ( $user instanceof \WP_User ) {
 			$this->user = $user;
 			return;
 		}
@@ -59,7 +59,7 @@ class UsersModel {
 	public static function find( int $id ): ?self {
 		$user = get_userdata( $id );
 
-		return $user instanceof \\WP_User ? new self( $user ) : null;
+		return $user instanceof \WP_User ? new self( $user ) : null;
 	}
 
 	/**
@@ -70,8 +70,8 @@ class UsersModel {
 	 * @return mixed
 	 */
 	public static function __callStatic( string $name, array $arguments ) {
-		if ( ! method_exists( UserQuery::class, $name ) || ( new \\ReflectionMethod( UserQuery::class, $name ) )->isStatic() ) {
-			throw new \\BadMethodCallException( sprintf( 'Undefined static method %s::%s().', self::class, $name ) );
+		if ( ! method_exists( UserQuery::class, $name ) || ( new \ReflectionMethod( UserQuery::class, $name ) )->isStatic() ) {
+			throw new \BadMethodCallException( sprintf( 'Undefined static method %s::%s().', self::class, $name ) );
 		}
 
 		return ( new self() )->$name( ...$arguments );
@@ -90,8 +90,8 @@ class UsersModel {
 	public function __call( string $name, array $arguments ) {
 		$this->assert_query();
 
-		if ( ! method_exists( $this->query, $name ) || ( new \\ReflectionMethod( $this->query, $name ) )->isStatic() ) {
-			throw new \\BadMethodCallException( sprintf( 'Undefined method %s::%s().', self::class, $name ) );
+		if ( ! method_exists( $this->query, $name ) || ( new \ReflectionMethod( $this->query, $name ) )->isStatic() ) {
+			throw new \BadMethodCallException( sprintf( 'Undefined method %s::%s().', self::class, $name ) );
 		}
 
 		$result = $this->query->$name( ...$arguments );
@@ -114,7 +114,7 @@ class UsersModel {
 		$models  = array();
 
 		foreach ( $results as $result ) {
-			$models[] = $result instanceof \\WP_User ? new self( $result ) : $result;
+			$models[] = $result instanceof \WP_User ? new self( $result ) : $result;
 		}
 
 		return $models;
@@ -132,10 +132,10 @@ class UsersModel {
 		$args['number'] = 1;
 		$args['offset'] = 0;
 
-		$query  = new \\WP_User_Query( $args );
+		$query  = new \WP_User_Query( $args );
 		$result = $query->get_results()[0] ?? null;
 
-		return $result instanceof \\WP_User ? new self( $result ) : $result;
+		return $result instanceof \WP_User ? new self( $result ) : $result;
 	}
 
 	/**
@@ -173,7 +173,7 @@ class UsersModel {
 	 * Create a user using the native WordPress API.
 	 *
 	 * @param array<string, mixed> $data User data accepted by wp_insert_user().
-	 * @return static|\\WP_Error
+	 * @return static|\WP_Error
 	 */
 	public static function create( array $data ) {
 		$user_id = wp_insert_user( $data );
@@ -186,14 +186,14 @@ class UsersModel {
 
 		return $model instanceof self
 			? $model
-			: new \\WP_Error( 'epm_user_not_found', 'The user was created but could not be loaded.' );
+			: new \WP_Error( 'epm_user_not_found', 'The user was created but could not be loaded.' );
 	}
 
 	/**
 	 * Update the wrapped user.
 	 *
 	 * @param array<string, mixed> $data User data accepted by wp_update_user().
-	 * @return bool|\\WP_Error
+	 * @return bool|\WP_Error
 	 */
 	public function update( array $data ) {
 		$this->assert_entity();
@@ -207,7 +207,7 @@ class UsersModel {
 
 		$updated_user = get_userdata( $this->user->ID );
 
-		if ( $updated_user instanceof \\WP_User ) {
+		if ( $updated_user instanceof \WP_User ) {
 			$this->user = $updated_user;
 		}
 
@@ -218,7 +218,7 @@ class UsersModel {
 	 * Delete the wrapped user.
 	 *
 	 * @param int|null $reassign Optional user ID to receive the deleted user's content.
-	 * @return bool|\\WP_Error
+	 * @return bool|\WP_Error
 	 */
 	public function delete( ?int $reassign = null ) {
 		$this->assert_entity();
@@ -290,15 +290,15 @@ class UsersModel {
 	 * @return bool
 	 */
 	public function __isset( string $name ): bool {
-		return $this->user instanceof \\WP_User && isset( $this->user->$name );
+		return $this->user instanceof \WP_User && isset( $this->user->$name );
 	}
 
 	/**
 	 * Return the wrapped WP_User instance.
 	 *
-	 * @return \\WP_User
+	 * @return \WP_User
 	 */
-	public function toWordPressUser(): \\WP_User {
+	public function toWordPressUser(): \WP_User {
 		$this->assert_entity();
 
 		return $this->user;
@@ -311,7 +311,7 @@ class UsersModel {
 	 */
 	private function assert_query(): void {
 		if ( ! $this->query instanceof UserQuery ) {
-			throw new \\LogicException( 'This UsersModel instance represents a user, not a query.' );
+			throw new \LogicException( 'This UsersModel instance represents a user, not a query.' );
 		}
 	}
 
@@ -321,8 +321,8 @@ class UsersModel {
 	 * @return void
 	 */
 	private function assert_entity(): void {
-		if ( ! $this->user instanceof \\WP_User ) {
-			throw new \\LogicException( 'This operation requires a loaded user. Call find(), first(), or create() first.' );
+		if ( ! $this->user instanceof \WP_User ) {
+			throw new \LogicException( 'This operation requires a loaded user. Call find(), first(), or create() first.' );
 		}
 	}
 }
