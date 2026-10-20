@@ -537,7 +537,7 @@ class UserQuery {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function getArgs(): array {
+	public function toArray(): array {
 		$args = $this->args;
 		$meta_query = $this->metaQuery->toArray();
 
