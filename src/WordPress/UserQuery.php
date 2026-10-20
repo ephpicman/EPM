@@ -537,7 +537,7 @@ class UserQuery {
 	 * @return array<int|string, mixed>
 	 */
 	public function get(): array {
-		$query = new \\WP_User_Query( $this->toArray() );
+		$query = new \WP_User_Query( $this->toArray() );
 
 		return $query->get_results();
 	}
@@ -555,7 +555,7 @@ class UserQuery {
 		$args                = $this->toArray();
 		$args['count_total'] = true;
 
-		$query = new \\WP_User_Query( $args );
+		$query = new \WP_User_Query( $args );
 
 		return (int) $query->get_total();
 	}
