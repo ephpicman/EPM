@@ -7,7 +7,7 @@
 
 namespace EPM;
 
-\defined( '\ABSPATH' ) || exit;
+\defined( 'ABSPATH' ) || exit;
 
 /**
  * Coordinates registered plugins and themes.
