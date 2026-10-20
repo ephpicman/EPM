@@ -320,25 +320,75 @@ class UserQuery {
 	}
 
 	/**
-	 * Search users using WordPress's native search behavior.
+	 * Search users by their login column.
 	 *
-	 * Replaces the existing "search" argument. If a non-empty list of columns
-	 * is provided, it also replaces "search_columns". When columns are
-	 * omitted or empty, any previously configured "search_columns" value is
-	 * left unchanged.
+	 * Sets the native WP_User_Query search term and restricts search_columns
+	 * to user_login. Replaces any previously configured search term and
+	 * search columns. This searches a native users-table column, not user meta.
 	 *
-	 * @param string   $term    Search term.
-	 * @param string[] $columns Optional fields to search.
+	 * @param string $term Search term.
 	 * @return $this
 	 */
-	public function search( string $term, array $columns = array() ): self {
-		$this->args['search'] = $term;
+	public function whereLogin( string $term ): self {
+		return $this->whereColumn( $term, 'user_login' );
+	}
 
-		if ( ! empty( $columns ) ) {
-			$this->args['search_columns'] = $columns;
-		} else {
-			unset( $this->args['search_columns'] );
-		}
+	/**
+	 * Search users by their email column.
+	 *
+	 * @param string $term Search term.
+	 * @return $this
+	 */
+	public function whereEmail( string $term ): self {
+		return $this->whereColumn( $term, 'user_email' );
+	}
+
+	/**
+	 * Search users by their URL column.
+	 *
+	 * @param string $term Search term.
+	 * @return $this
+	 */
+	public function whereUrl( string $term ): self {
+		return $this->whereColumn( $term, 'user_url' );
+	}
+
+	/**
+	 * Search users by their nicename column.
+	 *
+	 * WordPress calls this field "user_nicename"; it is not the user's
+	 * display name and is not a user-meta field.
+	 *
+	 * @param string $term Search term.
+	 * @return $this
+	 */
+	public function whereNicename( string $term ): self {
+		return $this->whereColumn( $term, 'user_nicename' );
+	}
+
+	/**
+	 * Search users by their display-name column.
+	 *
+	 * @param string $term Search term.
+	 * @return $this
+	 */
+	public function whereDisplayName( string $term ): self {
+		return $this->whereColumn( $term, 'display_name' );
+	}
+
+	/**
+	 * Set the native WordPress search term and its target column.
+	 *
+	 * This is an internal helper for the where*() methods. Each call replaces
+	 * the existing search term and search_columns setting.
+	 *
+	 * @param string $term   Search term.
+	 * @param string $column Native WP_User_Query search column.
+	 * @return $this
+	 */
+	private function whereColumn( string $term, string $column ): self {
+		$this->args['search']         = $term;
+		$this->args['search_columns'] = array( $column );
 
 		return $this;
 	}
@@ -398,7 +448,7 @@ class UserQuery {
 	 * @param string|string[] $fields Requested result fields.
 	 * @return $this
 	 */
-	public function fields( $fields ): self {
+	public function select( $fields ): self {
 		$this->args['fields'] = $fields;
 
 		return $this;
@@ -427,7 +477,4 @@ class UserQuery {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function getArgs(): array {
-		return $this->args;
 	}
-}
