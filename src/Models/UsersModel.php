@@ -10,6 +10,8 @@
 
 namespace EPM\Models;
 
+use EPM\WordPress\UserQuery;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -133,6 +135,10 @@ class UsersModel {
 	public static function __callStatic( string $name, array $arguments ) {
 		if ( 'where' === $name && 2 <= count( $arguments ) ) {
 			return ( new self() )->addWhere( (string) $arguments[0], $arguments[1] );
+		}
+
+		if ( method_exists( UserQuery::class, $name ) ) {
+			return UserQuery::make()->$name( ...$arguments );
 		}
 
 		throw new \BadMethodCallException( sprintf( 'Undefined static method %s::%s().', self::class, $name ) );
