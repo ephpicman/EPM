@@ -24,19 +24,65 @@ defined( 'ABSPATH' ) || exit;
  */
 class UserQuery {
 
-	/**
-	 * Arguments to pass to WP_User_Query.
-	 *
-	 * The array starts empty. WordPress applies its own defaults when these
-	 * arguments are eventually passed to WP_User_Query.
-	 *
-	 * @var array<string, mixed>
-	 */
-	private array $args = array();
+	/** @var string|array Role requirement(s). */
+	private $role = array();
+
+	/** @var string[] Roles accepted by role__in. */
+	private array $roleIn = array();
+
+	/** @var string[] Roles excluded by role__not_in. */
+	private array $roleNotIn = array();
+
+	/** @var int[] Included user IDs. */
+	private array $include = array();
+
+	/** @var int[] Excluded user IDs. */
+	private array $exclude = array();
+
+	/** @var string User login filter. */
+	private string $login = '';
+
+	/** @var string[] Included user logins. */
+	private array $loginIn = array();
+
+	/** @var string[] Excluded user logins. */
+	private array $loginNotIn = array();
+
+	/** @var string User nicename filter. */
+	private string $nicename = '';
+
+	/** @var string[] Included nicenames. */
+	private array $nicenameIn = array();
+
+	/** @var string[] Excluded nicenames. */
+	private array $nicenameNotIn = array();
+
+	/** @var string Search term. */
+	private string $search = '';
+
+	/** @var string[] Search columns. */
+	private array $searchColumns = array();
+
+	/** @var string Order-by field. */
+	private string $orderBy = '';
+
+	/** @var string Sort direction. */
+	private string $order = 'ASC';
+
+	/** @var int Maximum result count. */
+	private int $number = -1;
+
+	/** @var int Result offset. */
+	private int $offset = 0;
+
+	/** @var mixed Selected result fields. */
+	private $fields = 'all';
+
+	/** @var bool Whether WordPress should calculate the total result count. */
+	private bool $countTotal = false;
 
 	/** @var MetaQuery Builder for user metadata conditions. */
 	private MetaQuery $metaQuery;
-
 	/**
 	 * Create an empty user-query argument builder.
 	 *
@@ -66,7 +112,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function byRole( string $role ): self {
-		$this->args['role'] = $role;
+		$this->role = $role;
 
 		return $this;
 	}
@@ -81,7 +127,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function byRoles( array $roles ): self {
-		$this->args['role'] = $roles;
+		$this->role = $roles;
 
 		return $this;
 	}
@@ -101,10 +147,10 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function andInRoles( array $roles ): self {
-		$current = $this->args['role'] ?? array();
+		$current = $this->role ?? array();
 		$current = is_array( $current ) ? $current : array( $current );
 
-		$this->args['role'] = array_values(
+		$this->role = array_values(
 			array_unique(
 				array_merge( $current, $roles )
 			)
@@ -123,7 +169,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function inRoles( array $roles ): self {
-		$this->args['role__in'] = $roles;
+		$this->roleIn = $roles;
 
 		return $this;
 	}
@@ -137,7 +183,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function avoidRole( string $role ): self {
-		$this->args['role__not_in'] = array( $role );
+		$this->roleNotIn = array( $role );
 
 		return $this;
 	}
@@ -151,7 +197,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function avoidRoles( array $roles ): self {
-		$this->args['role__not_in'] = $roles;
+		$this->roleNotIn = $roles;
 
 		return $this;
 	}
@@ -165,7 +211,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function byId( int $id ): self {
-		$this->args['include'] = array( absint( $id ) );
+		$this->include = array( absint( $id ) );
 
 		return $this;
 	}
@@ -179,7 +225,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function byIds( array $ids ): self {
-		$this->args['include'] = array_map( 'absint', $ids );
+		$this->include = array_map( 'absint', $ids );
 
 		return $this;
 	}
@@ -193,7 +239,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function avoidId( int $id ): self {
-		$this->args['exclude'] = array( absint( $id ) );
+		$this->exclude = array( absint( $id ) );
 
 		return $this;
 	}
@@ -207,7 +253,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function avoidIds( array $ids ): self {
-		$this->args['exclude'] = array_map( 'absint', $ids );
+		$this->exclude = array_map( 'absint', $ids );
 
 		return $this;
 	}
@@ -221,7 +267,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function byLogin( string $login ): self {
-		$this->args['login'] = $login;
+		$this->login = $login;
 
 		return $this;
 	}
@@ -235,7 +281,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function byLogins( array $logins ): self {
-		$this->args['login__in'] = $logins;
+		$this->loginIn = $logins;
 
 		return $this;
 	}
@@ -249,7 +295,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function avoidLogin( string $login ): self {
-		$this->args['login__not_in'] = array( $login );
+		$this->loginNotIn = array( $login );
 
 		return $this;
 	}
@@ -263,7 +309,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function avoidLogins( array $logins ): self {
-		$this->args['login__not_in'] = $logins;
+		$this->loginNotIn = $logins;
 
 		return $this;
 	}
@@ -277,7 +323,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function byNicename( string $nicename ): self {
-		$this->args['nicename'] = $nicename;
+		$this->nicename = $nicename;
 
 		return $this;
 	}
@@ -291,7 +337,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function byNicenames( array $nicenames ): self {
-		$this->args['nicename__in'] = $nicenames;
+		$this->nicenameIn = $nicenames;
 
 		return $this;
 	}
@@ -305,7 +351,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function avoidNicename( string $nicename ): self {
-		$this->args['nicename__not_in'] = array( $nicename );
+		$this->nicenameNotIn = array( $nicename );
 
 		return $this;
 	}
@@ -319,7 +365,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function avoidNicenames( array $nicenames ): self {
-		$this->args['nicename__not_in'] = $nicenames;
+		$this->nicenameNotIn = $nicenames;
 
 		return $this;
 	}
@@ -392,8 +438,8 @@ class UserQuery {
 	 * @return $this
 	 */
 	private function byColumn( string $term, string $column ): self {
-		$this->args['search']         = $term;
-		$this->args['search_columns'] = array( $column );
+		$this->search         = $term;
+		$this->searchColumns = array( $column );
 
 		return $this;
 	}
@@ -409,8 +455,8 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function orderBy( string $field, string $direction = 'ASC' ): self {
-		$this->args['orderby'] = $field;
-		$this->args['order']   = 'DESC' === strtoupper( $direction ) ? 'DESC' : 'ASC';
+		$this->orderBy = $field;
+		$this->order   = 'DESC' === strtoupper( $direction ) ? 'DESC' : 'ASC';
 
 		return $this;
 	}
@@ -425,7 +471,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function limit( int $number ): self {
-		$this->args['number'] = $number;
+		$this->number = $number;
 
 		return $this;
 	}
@@ -439,7 +485,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function offset( int $number ): self {
-		$this->args['offset'] = max( 0, $number );
+		$this->offset = max( 0, $number );
 
 		return $this;
 	}
@@ -454,7 +500,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function select( $fields ): self {
-		$this->args['fields'] = $fields;
+		$this->fields = $fields;
 
 		return $this;
 	}
@@ -468,7 +514,7 @@ class UserQuery {
 	 * @return $this
 	 */
 	public function countTotal( bool $count_total = true ): self {
-		$this->args['count_total'] = $count_total;
+		$this->countTotal = $count_total;
 
 		return $this;
 	}
@@ -581,11 +627,60 @@ class UserQuery {
 	 * @return array<string, mixed>
 	 */
 	public function toArray(): array {
-		$args = $this->args;
-		$meta_query = $this->metaQuery->toArray();
+		$args = array();
 
-		if ( ! empty( $meta_query ) ) {
-			$args['meta_query'] = $meta_query;
+		if ( '' !== $this->role && array() !== $this->role ) {
+			$args['role'] = $this->role;
+		}
+		if ( ! empty( $this->roleIn ) ) {
+			$args['role__in'] = $this->roleIn;
+		}
+		if ( ! empty( $this->roleNotIn ) ) {
+			$args['role__not_in'] = $this->roleNotIn;
+		}
+		if ( ! empty( $this->include ) ) {
+			$args['include'] = $this->include;
+		}
+		if ( ! empty( $this->exclude ) ) {
+			$args['exclude'] = $this->exclude;
+		}
+		if ( '' !== $this->login ) {
+			$args['login'] = $this->login;
+		}
+		if ( ! empty( $this->loginIn ) ) {
+			$args['login__in'] = $this->loginIn;
+		}
+		if ( ! empty( $this->loginNotIn ) ) {
+			$args['login__not_in'] = $this->loginNotIn;
+		}
+		if ( '' !== $this->nicename ) {
+			$args['nicename'] = $this->nicename;
+		}
+		if ( ! empty( $this->nicenameIn ) ) {
+			$args['nicename__in'] = $this->nicenameIn;
+		}
+		if ( ! empty( $this->nicenameNotIn ) ) {
+			$args['nicename__not_in'] = $this->nicenameNotIn;
+		}
+		if ( '' !== $this->search ) {
+			$args['search'] = $this->search;
+		}
+		if ( ! empty( $this->searchColumns ) ) {
+			$args['search_columns'] = $this->searchColumns;
+		}
+		if ( '' !== $this->orderBy ) {
+			$args['orderby'] = $this->orderBy;
+		}
+
+		$args['order']       = $this->order;
+		$args['number']      = $this->number;
+		$args['offset']      = $this->offset;
+		$args['fields']      = $this->fields;
+		$args['count_total'] = $this->countTotal;
+
+		$metaQuery = $this->metaQuery->toArray();
+		if ( ! empty( $metaQuery ) ) {
+			$args['meta_query'] = $metaQuery;
 		}
 
 		return $args;
