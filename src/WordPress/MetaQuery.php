@@ -239,16 +239,18 @@ class MetaQuery {
 	 * @param string $type       Key type, where supported by WordPress.
 	 * @return $this
 	 */
-	public function whereMetaKey( string $key, string $comparison = '=', string $type = 'CHAR' ): self {
-		return $this->addClause(
-			array(
-				'key'        => $key,
-				'compare'    => 'EXISTS',
-				'compare_key'=> $comparison,
-				'type_key'   => $type,
-			),
-			'AND'
+	public function whereMetaKey( string $key, string $comparison = '=', string $type = '' ): self {
+		$clause = array(
+			'key'         => $key,
+			'compare'     => 'EXISTS',
+			'compare_key' => $comparison,
 		);
+
+		if ( '' !== $type ) {
+			$clause['type_key'] = $type;
+		}
+
+		return $this->addClause( $clause, 'AND' );
 	}
 
 	/**
