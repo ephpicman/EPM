@@ -94,9 +94,7 @@ class UsersModel {
 	 * @param mixed  $value Field value.
 	 * @return static
 	 */
-	public static function where( string $field, $value ): self {
-		$model = new self();
-
+	private function addWhere( string $field, $value ): self {
 		if ( ! in_array( $field, self::QUERY_FIELDS, true ) ) {
 			_doing_it_wrong(
 				__METHOD__,
@@ -104,9 +102,9 @@ class UsersModel {
 				'1.0.0'
 			);
 
-			$model->query_args['include'] = array( 0 );
+			$this->query_args['include'] = array( 0 );
 
-			return $model;
+			return $this;
 		}
 
 		if ( 'ID' === $field ) {
@@ -117,12 +115,42 @@ class UsersModel {
 		}
 
 		if ( 'include' === $field ) {
-			$model->query_args['include'] = $value;
+			$this->query_args['include'] = $value;
 		} else {
-			$model->query_args[ $field ] = $value;
+			$this->query_args[ $field ] = $value;
 		}
 
-		return $model;
+		return $this;
+	}
+
+	/**
+	 * Support Laravel-inspired static and chained query syntax.
+	 *
+	 * @param string $name      Method name.
+	 * @param array  $arguments Method arguments.
+	 * @return mixed
+	 */
+	public static function __callStatic( string $name, array $arguments ) {
+		if ( 'where' === $name && 2 <= count( $arguments ) ) {
+			return ( new self() )->addWhere( (string) $arguments[0], $arguments[1] );
+		}
+
+		throw new \BadMethodCallException( sprintf( 'Undefined static method %s::%s().', self::class, $name ) );
+	}
+
+	/**
+	 * Support chained where() calls on the query builder.
+	 *
+	 * @param string $name      Method name.
+	 * @param array  $arguments Method arguments.
+	 * @return mixed
+	 */
+	public function __call( string $name, array $arguments ) {
+		if ( 'where' === $name && 2 <= count( $arguments ) ) {
+			return $this->addWhere( (string) $arguments[0], $arguments[1] );
+		}
+
+		throw new \BadMethodCallException( sprintf( 'Undefined method %s::%s().', self::class, $name ) );
 	}
 
 	/**
