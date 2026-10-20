@@ -5,7 +5,7 @@
  * @package EPM
  */
 
-namespace EPM\\WordPress;
+namespace EPM\WordPress;
 
 defined( 'ABSPATH' ) || exit;
 
