@@ -385,7 +385,9 @@ class MetaQuery {
 
 		$relation = 'OR' === strtoupper( $relation ) ? 'OR' : 'AND';
 
-		if ( ! isset( $conditions['relation'] ) ) {
+		if ( isset( $conditions['relation'] ) ) {
+			$conditions['relation'] = $relation;
+		} else {
 			$conditions = array(
 				'relation' => $relation,
 				$conditions,
