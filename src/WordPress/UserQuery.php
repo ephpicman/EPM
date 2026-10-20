@@ -25,7 +25,7 @@ defined( 'ABSPATH' ) || exit;
 class UserQuery {
 
 	/** @var string|array Role requirement(s). */
-	private $role = array();
+	private $role = null;
 
 	/** @var string[] Roles accepted by role__in. */
 	private array $roleIn = array();
@@ -40,7 +40,7 @@ class UserQuery {
 	private array $exclude = array();
 
 	/** @var string User login filter. */
-	private string $login = '';
+	private ?string $login = null;
 
 	/** @var string[] Included user logins. */
 	private array $loginIn = array();
@@ -49,7 +49,7 @@ class UserQuery {
 	private array $loginNotIn = array();
 
 	/** @var string User nicename filter. */
-	private string $nicename = '';
+	private ?string $nicename = null;
 
 	/** @var string[] Included nicenames. */
 	private array $nicenameIn = array();
@@ -58,28 +58,28 @@ class UserQuery {
 	private array $nicenameNotIn = array();
 
 	/** @var string Search term. */
-	private string $search = '';
+	private ?string $search = null;
 
 	/** @var string[] Search columns. */
-	private array $searchColumns = array();
+	private ?array $searchColumns = null;
 
 	/** @var string Order-by field. */
-	private string $orderBy = '';
+	private ?string $orderBy = null;
 
 	/** @var string Sort direction. */
-	private string $order = 'ASC';
+	private ?string $order = null;
 
 	/** @var int Maximum result count. */
-	private int $number = -1;
+	private ?int $number = null;
 
 	/** @var int Result offset. */
-	private int $offset = 0;
+	private ?int $offset = null;
 
 	/** @var mixed Selected result fields. */
-	private $fields = 'all';
+	private $fields = null;
 
 	/** @var bool Whether WordPress should calculate the total result count. */
-	private bool $countTotal = false;
+	private ?bool $countTotal = null;
 
 	/** @var MetaQuery Builder for user metadata conditions. */
 	private MetaQuery $metaQuery;
@@ -629,7 +629,7 @@ class UserQuery {
 	public function toArray(): array {
 		$args = array();
 
-		if ( '' !== $this->role && array() !== $this->role ) {
+		if ( null !== $this->role ) {
 			$args['role'] = $this->role;
 		}
 		if ( ! empty( $this->roleIn ) ) {
@@ -644,7 +644,7 @@ class UserQuery {
 		if ( ! empty( $this->exclude ) ) {
 			$args['exclude'] = $this->exclude;
 		}
-		if ( '' !== $this->login ) {
+		if ( null !== $this->login ) {
 			$args['login'] = $this->login;
 		}
 		if ( ! empty( $this->loginIn ) ) {
@@ -653,7 +653,7 @@ class UserQuery {
 		if ( ! empty( $this->loginNotIn ) ) {
 			$args['login__not_in'] = $this->loginNotIn;
 		}
-		if ( '' !== $this->nicename ) {
+		if ( null !== $this->nicename ) {
 			$args['nicename'] = $this->nicename;
 		}
 		if ( ! empty( $this->nicenameIn ) ) {
@@ -662,21 +662,31 @@ class UserQuery {
 		if ( ! empty( $this->nicenameNotIn ) ) {
 			$args['nicename__not_in'] = $this->nicenameNotIn;
 		}
-		if ( '' !== $this->search ) {
+		if ( null !== $this->search ) {
 			$args['search'] = $this->search;
 		}
-		if ( ! empty( $this->searchColumns ) ) {
+		if ( null !== $this->searchColumns ) {
 			$args['search_columns'] = $this->searchColumns;
 		}
-		if ( '' !== $this->orderBy ) {
+		if ( null !== $this->orderBy ) {
 			$args['orderby'] = $this->orderBy;
 		}
 
-		$args['order']       = $this->order;
-		$args['number']      = $this->number;
-		$args['offset']      = $this->offset;
-		$args['fields']      = $this->fields;
-		$args['count_total'] = $this->countTotal;
+		if ( null !== $this->order ) {
+			$args['order'] = $this->order;
+		}
+		if ( null !== $this->number ) {
+			$args['number'] = $this->number;
+		}
+		if ( null !== $this->offset ) {
+			$args['offset'] = $this->offset;
+		}
+		if ( null !== $this->fields ) {
+			$args['fields'] = $this->fields;
+		}
+		if ( null !== $this->countTotal ) {
+			$args['count_total'] = $this->countTotal;
+		}
 
 		$metaQuery = $this->metaQuery->toArray();
 		if ( ! empty( $metaQuery ) ) {
