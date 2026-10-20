@@ -12,21 +12,17 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Fluent builder for the meta_query argument accepted by WordPress query APIs.
  *
- * The builder only creates a meta-query array; it does not execute a query.
- * Conditions are translated to the structure expected by WP_Meta_Query.
+ * The query property always contains a valid WordPress meta-query structure.
+ * The builder creates query arguments only; it does not execute a query.
  *
  * @see https://developer.wordpress.org/reference/classes/wp_meta_query/
  */
 class MetaQuery {
 
 	/**
-	 * Metadata conditions in insertion order.
+	 * WordPress-compatible metadata query structure.
 	 *
-	 * Each item contains a boolean operator and either a metadata clause or
-	 * a nested group. Keeping the boolean on each item allows mixed AND/OR
-	 * expressions to be compiled into WordPress's nested relation format.
-	 *
-	 * @var array<int, array{boolean: string, query: array<string|int, mixed>}>
+	 * @var array<string|int, mixed>
 	 */
 	private array $query = array();
 
@@ -49,13 +45,10 @@ class MetaQuery {
 	 *
 	 * Usage:
 	 * - where( 'age', '>=', 18, 'NUMERIC' )
-	 * - where( 'status', 'active' ) // defaults to equality
-	 *
-	 * The operator may be any operator supported by WP_Meta_Query.
+	 * - where( 'status', 'active' )
 	 *
 	 * @param string $key      Metadata key.
-	 * @param mixed  $operator Comparison operator, or the value when only two
-	 *                          arguments are supplied.
+	 * @param mixed  $operator Comparison operator, or value in shorthand form.
 	 * @param mixed  $value    Value to compare.
 	 * @param string $type     WordPress metadata value type.
 	 * @return $this
@@ -81,8 +74,7 @@ class MetaQuery {
 	 * Add a metadata condition joined with OR.
 	 *
 	 * @param string $key      Metadata key.
-	 * @param mixed  $operator Comparison operator, or the value when only two
-	 *                          arguments are supplied.
+	 * @param mixed  $operator Comparison operator, or value in shorthand form.
 	 * @param mixed  $value    Value to compare.
 	 * @param string $type     WordPress metadata value type.
 	 * @return $this
@@ -107,9 +99,9 @@ class MetaQuery {
 	/**
 	 * Add an IN metadata condition.
 	 *
-	 * @param string   $key   Metadata key.
-	 * @param array    $values Values to match.
-	 * @param string   $type  WordPress metadata value type.
+	 * @param string $key    Metadata key.
+	 * @param array  $values Values to match.
+	 * @param string $type   WordPress metadata value type.
 	 * @return $this
 	 */
 	public function whereIn( string $key, array $values, string $type = 'CHAR' ): self {
@@ -231,8 +223,7 @@ class MetaQuery {
 	/**
 	 * Match records where the metadata key itself satisfies a comparison.
 	 *
-	 * This uses WP_Meta_Query's compare_key and type_key clause arguments.
-	 * The clause checks for the existence of a matching key.
+	 * Uses WP_Meta_Query's compare_key and type_key arguments.
 	 *
 	 * @param string $key        Metadata key or key pattern.
 	 * @param string $comparison Key comparison operator.
@@ -256,11 +247,8 @@ class MetaQuery {
 	/**
 	 * Add a nested condition group.
 	 *
-	 * The callback receives a fresh MetaQuery instance. Its conditions are
-	 * grouped using the supplied relation before being added to this builder.
-	 *
 	 * @param callable $callback Receives the nested MetaQuery builder.
-	 * @param string   $relation Group relation: AND or OR.
+	 * @param string   $relation Relation inside the group: AND or OR.
 	 * @return $this
 	 */
 	public function whereGroup( callable $callback, string $relation = 'AND' ): self {
@@ -271,7 +259,7 @@ class MetaQuery {
 	 * Add a nested condition group joined to the current expression with OR.
 	 *
 	 * @param callable $callback Receives the nested MetaQuery builder.
-	 * @param string   $relation Group relation: AND or OR.
+	 * @param string   $relation Relation inside the group: AND or OR.
 	 * @return $this
 	 */
 	public function orWhereGroup( callable $callback, string $relation = 'AND' ): self {
@@ -303,11 +291,10 @@ class MetaQuery {
 	/**
 	 * Add a complete WordPress metadata clause.
 	 *
-	 * This escape hatch supports all WP_Meta_Query clause arguments, including
-	 * compare_key and type_key, and helps preserve compatibility with future
-	 * WordPress additions. The clause is passed through without normalization.
+	 * The clause is passed through unchanged, supporting WP_Meta_Query
+	 * arguments not otherwise exposed by dedicated methods.
 	 *
-	 * @param array<string, mixed> $clause WordPress metadata clause.
+	 * @param array<string, mixed> $clause  WordPress metadata clause.
 	 * @param string               $boolean Boolean joining this clause: AND/OR.
 	 * @return $this
 	 */
@@ -316,26 +303,73 @@ class MetaQuery {
 	}
 
 	/**
-	 * Add a clause or nested group to the internal expression.
+	 * Add a clause to the WordPress-compatible query structure.
 	 *
-	 * @param array<string|int, mixed> $query   Clause or nested group.
-	 * @param string                  $boolean Boolean joining this item.
+	 * AND conditions are added to the current final AND branch. OR conditions
+	 * start a new branch. The property remains in WP_Meta_Query array format
+	 * after every call.
+	 *
+	 * @param array<string|int, mixed> $clause  Clause or nested group.
+	 * @param string                  $boolean Boolean joining this clause.
 	 * @return $this
 	 */
-	private function addClause( array $query, string $boolean ): self {
-		$this->query[] = array(
-			'boolean' => 'OR' === strtoupper( $boolean ) ? 'OR' : 'AND',
-			'query'   => $query,
-		);
+	private function addClause( array $clause, string $boolean ): self {
+		$boolean = 'OR' === strtoupper( $boolean ) ? 'OR' : 'AND';
+
+		if ( empty( $this->query ) ) {
+			$this->query = $clause;
+			return $this;
+		}
+
+		if ( 'OR' === $boolean ) {
+			if ( isset( $this->query['relation'] ) && 'OR' === $this->query['relation'] ) {
+				$this->query[] = $clause;
+			} else {
+				$this->query = array(
+					'relation' => 'OR',
+					$this->query,
+					$clause,
+				);
+			}
+
+			return $this;
+		}
+
+		if ( isset( $this->query['relation'] ) && 'OR' === $this->query['relation'] ) {
+			$last_key = array_key_last( $this->query );
+			$last     = $this->query[ $last_key ];
+
+			if ( isset( $last['relation'] ) && 'AND' === $last['relation'] ) {
+				$this->query[ $last_key ][] = $clause;
+			} else {
+				$this->query[ $last_key ] = array(
+					'relation' => 'AND',
+					$last,
+					$clause,
+				);
+			}
+
+			return $this;
+		}
+
+		if ( isset( $this->query['relation'] ) && 'AND' === $this->query['relation'] ) {
+			$this->query[] = $clause;
+		} else {
+			$this->query = array(
+				'relation' => 'AND',
+				$this->query,
+				$clause,
+			);
+		}
 
 		return $this;
 	}
 
 	/**
-	 * Build a nested group using a child builder.
+	 * Build and add a nested group using a child builder.
 	 *
 	 * @param callable $callback Callback receiving the child builder.
-	 * @param string   $relation Relation within the group.
+	 * @param string   $relation Relation inside the group.
 	 * @param string   $boolean  Relation between this group and its siblings.
 	 * @return $this
 	 */
@@ -351,9 +385,7 @@ class MetaQuery {
 
 		$relation = 'OR' === strtoupper( $relation ) ? 'OR' : 'AND';
 
-		if ( isset( $conditions['relation'] ) ) {
-			$conditions['relation'] = $relation;
-		} else {
+		if ( ! isset( $conditions['relation'] ) ) {
 			$conditions = array(
 				'relation' => $relation,
 				$conditions,
@@ -364,67 +396,13 @@ class MetaQuery {
 	}
 
 	/**
-	 * Convert the expression into the array format accepted as meta_query.
+	 * Return the WordPress-compatible meta_query array.
 	 *
-	 * Mixed boolean conditions are compiled into nested groups. AND binds
-	 * more tightly than OR, matching normal SQL boolean-expression semantics.
+	 * The query property is already kept in its final structure.
 	 *
 	 * @return array<string|int, mixed>
 	 */
 	public function toArray(): array {
-		if ( empty( $this->query ) ) {
-			return array();
-		}
-
-		$groups       = array();
-		$current_group = array();
-
-		foreach ( $this->query as $index => $item ) {
-			if ( $index > 0 && 'OR' === $item['boolean'] ) {
-				$groups[]      = $this->compileAndGroup( $current_group );
-				$current_group = array();
-			}
-
-			$current_group[] = $item['query'];
-		}
-
-		if ( ! empty( $current_group ) ) {
-			$groups[] = $this->compileAndGroup( $current_group );
-		}
-
-		if ( 1 === count( $groups ) ) {
-			$compiled = $groups[0];
-
-			if ( isset( $compiled['relation'] ) ) {
-				return $compiled;
-			}
-
-			return array(
-				'relation' => 'AND',
-				$compiled,
-			);
-		}
-
-		return array_merge(
-			array( 'relation' => 'OR' ),
-			$groups
-		);
-	}
-
-	/**
-	 * Compile an AND-connected sequence into a clause or relation group.
-	 *
-	 * @param array<int, array<string|int, mixed>> $items Conditions in group.
-	 * @return array<string|int, mixed>
-	 */
-	private function compileAndGroup( array $items ): array {
-		if ( 1 === count( $items ) ) {
-			return $items[0];
-		}
-
-		return array_merge(
-			array( 'relation' => 'AND' ),
-			$items
-		);
+		return $this->query;
 	}
 }
