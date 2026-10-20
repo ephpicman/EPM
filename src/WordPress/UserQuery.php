@@ -34,13 +34,18 @@ class UserQuery {
 	 */
 	private array $args = array();
 
+	/** @var MetaQuery Builder for user metadata conditions. */
+	private MetaQuery $metaQuery;
+
 	/**
 	 * Create an empty user-query argument builder.
 	 *
 	 * No arguments are accepted. Configure the query using the fluent
 	 * methods, then retrieve the resulting arguments with getArgs().
 	 */
-	public function __construct() {}
+	public function __construct() {
+		$this->metaQuery = MetaQuery::make();
+	}
 
 	/**
 	 * Create a new empty argument builder.
@@ -329,7 +334,7 @@ class UserQuery {
 	 * @param string $term Search term.
 	 * @return $this
 	 */
-	public function byLogin( string $term ): self {
+	public function searchByLogin( string $term ): self {
 		return $this->byColumn( $term, 'user_login' );
 	}
 
@@ -362,7 +367,7 @@ class UserQuery {
 	 * @param string $term Search term.
 	 * @return $this
 	 */
-	public function byNicename( string $term ): self {
+	public function searchByNicename( string $term ): self {
 		return $this->byColumn( $term, 'user_nicename' );
 	}
 
@@ -468,6 +473,47 @@ class UserQuery {
 		return $this;
 	}
 
+	/** Add a metadata condition joined with AND. @return $this */
+	public function where( string $key, $operator, $value = null, string $type = 'CHAR' ): self {
+		$this->metaQuery->where( $key, $operator, $value, $type ); return $this;
+	}
+	/** Add a metadata condition joined with OR. @return $this */
+	public function orWhere( string $key, $operator, $value = null, string $type = 'CHAR' ): self {
+		$this->metaQuery->orWhere( $key, $operator, $value, $type ); return $this;
+	}
+	/** @return $this */
+	public function whereIn( string $key, array $values, string $type = 'CHAR' ): self { $this->metaQuery->whereIn( $key, $values, $type ); return $this; }
+	/** @return $this */
+	public function whereNotIn( string $key, array $values, string $type = 'CHAR' ): self { $this->metaQuery->whereNotIn( $key, $values, $type ); return $this; }
+	/** @return $this */
+	public function whereBetween( string $key, array $values, string $type = 'CHAR' ): self { $this->metaQuery->whereBetween( $key, $values, $type ); return $this; }
+	/** @return $this */
+	public function whereNotBetween( string $key, array $values, string $type = 'CHAR' ): self { $this->metaQuery->whereNotBetween( $key, $values, $type ); return $this; }
+	/** @return $this */
+	public function whereLike( string $key, string $value ): self { $this->metaQuery->whereLike( $key, $value ); return $this; }
+	/** @return $this */
+	public function whereNotLike( string $key, string $value ): self { $this->metaQuery->whereNotLike( $key, $value ); return $this; }
+	/** @return $this */
+	public function whereRegexp( string $key, string $pattern ): self { $this->metaQuery->whereRegexp( $key, $pattern ); return $this; }
+	/** @return $this */
+	public function whereNotRegexp( string $key, string $pattern ): self { $this->metaQuery->whereNotRegexp( $key, $pattern ); return $this; }
+	/** @return $this */
+	public function whereExists( string $key ): self { $this->metaQuery->whereExists( $key ); return $this; }
+	/** @return $this */
+	public function whereNotExists( string $key ): self { $this->metaQuery->whereNotExists( $key ); return $this; }
+	/** @return $this */
+	public function whereMetaKey( string $key, string $comparison = '=', string $type = '' ): self { $this->metaQuery->whereMetaKey( $key, $comparison, $type ); return $this; }
+	/** @return $this */
+	public function whereGroup( callable $callback, string $relation = 'AND' ): self { $this->metaQuery->whereGroup( $callback, $relation ); return $this; }
+	/** @return $this */
+	public function orWhereGroup( callable $callback, string $relation = 'AND' ): self { $this->metaQuery->orWhereGroup( $callback, $relation ); return $this; }
+	/** @return $this */
+	public function whereAny( callable $callback ): self { $this->metaQuery->whereAny( $callback ); return $this; }
+	/** @return $this */
+	public function whereAll( callable $callback ): self { $this->metaQuery->whereAll( $callback ); return $this; }
+	/** @return $this */
+	public function whereClause( array $clause, string $boolean = 'AND' ): self { $this->metaQuery->whereClause( $clause, $boolean ); return $this; }
+
 	/**
 	 * Get the arguments built so far.
 	 *
@@ -477,4 +523,14 @@ class UserQuery {
 	 *
 	 * @return array<string, mixed>
 	 */
+	public function getArgs(): array {
+		$args = $this->args;
+		$meta_query = $this->metaQuery->toArray();
+
+		if ( ! empty( $meta_query ) ) {
+			$args['meta_query'] = $meta_query;
+		}
+
+		return $args;
 	}
+}
