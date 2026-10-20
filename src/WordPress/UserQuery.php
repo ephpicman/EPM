@@ -5,7 +5,7 @@
  * @package EPM
  */
 
-namespace EPM\\WordPress;
+namespace EPM\WordPress;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * This class only builds the query-argument array. It does not execute a
  * query, return users, or represent a user entity. It is independent of
- * EPM\\Models\\UsersModel.
+ * EPM\Models\UsersModel.
  *
  * Each regular setter replaces the value previously assigned to its
  * corresponding argument key. Methods explicitly prefixed with "and" add
@@ -604,7 +604,7 @@ class UserQuery {
 	 * @return array<int|string, mixed>
 	 */
 	public function get(): array {
-		$query = new \\WP_User_Query( $this->toArray() );
+		$query = new \WP_User_Query( $this->toArray() );
 
 		return $query->get_results();
 	}
@@ -622,7 +622,7 @@ class UserQuery {
 		$args                = $this->toArray();
 		$args['count_total'] = true;
 
-		$query = new \\WP_User_Query( $args );
+		$query = new \WP_User_Query( $args );
 
 		return (int) $query->get_total();
 	}
