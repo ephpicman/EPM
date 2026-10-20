@@ -527,6 +527,31 @@ class UserQuery {
 	}
 
 	/**
+	 * Return selected user-meta keys.
+	 *
+	 * Native user-table columns are excluded. When no selection was specified,
+	 * no metadata fields are considered explicitly selected.
+	 *
+	 * @return string[]
+	 */
+	public function getSelectedMetaFields(): array {
+		if ( null === $this->fields || 'all' === $this->fields || 'ID' === $this->fields ) {
+			return array();
+		}
+
+		$fields = is_array( $this->fields ) ? $this->fields : array( $this->fields );
+
+		return array_values(
+			array_filter(
+				$fields,
+				static function ( $field ): bool {
+					return is_string( $field ) && ! in_array( $field, self::USER_COLUMNS, true );
+				}
+			)
+		);
+	}
+
+	/**
 	 * Set whether WordPress should calculate the total matching-user count.
 	 *
 	 * Replaces the "count_total" argument.
@@ -604,7 +629,14 @@ class UserQuery {
 	 * @return array<int|string, mixed>
 	 */
 	public function get(): array {
-		$query = new \WP_User_Query( $this->toArray() );
+		$args = $this->toArray();
+
+		// EPM select() describes model fields, not WP_User_Query result shape.
+		if ( null !== $this->fields ) {
+			$args['fields'] = 'all';
+		}
+
+		$query = new \WP_User_Query( $args );
 
 		return $query->get_results();
 	}
@@ -702,6 +734,9 @@ class UserQuery {
 		if ( null !== $this->offset ) {
 			$args['offset'] = $this->offset;
 		}
+		// Preserve the selected fields as EPM query state. WP_User_Query's
+		// fields argument changes the result type, so execution normalizes it
+		// to 'all' in get() when EPM select() is used.
 		if ( null !== $this->fields ) {
 			$args['fields'] = $this->fields;
 		}
