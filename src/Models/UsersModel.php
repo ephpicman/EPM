@@ -2,76 +2,52 @@
 /**
  * WordPress user model.
  *
- * Provides a lightweight, Laravel-inspired API while delegating persistence
- * and querying to WordPress core APIs.
+ * Provides a lightweight API for querying users and wrapping user entities.
  *
  * @package EPM
  */
 
-namespace EPM\Models;
+namespace EPM\\Models;
 
-use EPM\WordPress\UserQuery;
+use EPM\\WordPress\\UserQuery;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * User query and entity wrapper.
+ * User query facade and WordPress user entity wrapper.
  *
- * This class intentionally keeps query-building and entity operations together
- * for now. They can be separated later without changing the public API.
+ * Query construction is delegated to UserQuery. This class is responsible for
+ * exposing that builder through the model API and wrapping WP_User entities.
  */
 class UsersModel {
 
-	/**
-	 * Supported WP_User_Query fields.
-	 *
-	 * @var array<int, string>
-	 */
-	private const QUERY_FIELDS = array(
-		'ID',
-		'user_login',
-		'user_nicename',
-		'user_email',
-		'user_url',
-		'user_registered',
-		'user_status',
-		'display_name',
-		'role',
-	);
+	/** @var UserQuery|null Query builder; null when this instance wraps a user. */
+	private ?UserQuery $query = null;
+
+	/** @var \\WP_User|null Wrapped WordPress user. */
+	private ?\\WP_User $user = null;
 
 	/**
-	 * Query arguments passed to WP_User_Query.
+	 * Create a query facade or wrap an existing WordPress user.
 	 *
-	 * @var array<string, mixed>
+	 * @param \\WP_User|null $user Optional WordPress user entity.
 	 */
-	private array $query_args = array(
-		'number' => -1,
-	);
-
-	/**
-	 * Whether this instance represents a query builder.
-	 *
-	 * @var bool
-	 */
-	private bool $is_query = true;
-
-	/**
-	 * The wrapped WordPress user, when this instance represents a user.
-	 *
-	 * @var \WP_User|null
-	 */
-	private ?\WP_User $user = null;
-
-	/**
-	 * Create a new query or entity wrapper.
-	 *
-	 * @param \WP_User|null $user Optional WordPress user.
-	 */
-	private function __construct( ?\WP_User $user = null ) {
-		if ( $user instanceof \WP_User ) {
-			$this->user     = $user;
-			$this->is_query = false;
+	private function __construct( ?\\WP_User $user = null ) {
+		if ( $user instanceof \\WP_User ) {
+			$this->user = $user;
+			return;
 		}
+
+		$this->query = UserQuery::make();
+	}
+
+	/**
+	 * Start building a user query.
+	 *
+	 * @return static
+	 */
+	public static function make(): self {
+		return new self();
 	}
 
 	/**
@@ -83,210 +59,121 @@ class UsersModel {
 	public static function find( int $id ): ?self {
 		$user = get_userdata( $id );
 
-		return $user instanceof \WP_User ? new self( $user ) : null;
+		return $user instanceof \\WP_User ? new self( $user ) : null;
 	}
 
 	/**
-	 * Begin a user query with an equality condition.
-	 *
-	 * Supported fields are listed in QUERY_FIELDS. Use whereMeta() for user
-	 * metadata instead of passing arbitrary meta keys to this method.
-	 *
-	 * @param string $field User query field.
-	 * @param mixed  $value Field value.
-	 * @return static
-	 */
-	private function addWhere( string $field, $value ): self {
-		if ( ! in_array( $field, self::QUERY_FIELDS, true ) ) {
-			_doing_it_wrong(
-				__METHOD__,
-				'Unsupported user field. Use a supported WP_User_Query field or whereMeta() for metadata.',
-				'1.0.0'
-			);
-
-			$this->query_args['include'] = array( 0 );
-
-			return $this;
-		}
-
-		if ( 'ID' === $field ) {
-			$field = 'include';
-			$value = array( absint( $value ) );
-		} elseif ( 'role' === $field ) {
-			$field = 'role';
-		}
-
-		if ( 'include' === $field ) {
-			$this->query_args['include'] = $value;
-		} else {
-			$this->query_args[ $field ] = $value;
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Support Laravel-inspired static and chained query syntax.
+	 * Forward static query-builder calls through a new model query facade.
 	 *
 	 * @param string $name      Method name.
 	 * @param array  $arguments Method arguments.
 	 * @return mixed
 	 */
 	public static function __callStatic( string $name, array $arguments ) {
-		if ( 'where' === $name && 2 <= count( $arguments ) ) {
-			return ( new self() )->addWhere( (string) $arguments[0], $arguments[1] );
+		if ( ! method_exists( UserQuery::class, $name ) || ( new \\ReflectionMethod( UserQuery::class, $name ) )->isStatic() ) {
+			throw new \\BadMethodCallException( sprintf( 'Undefined static method %s::%s().', self::class, $name ) );
 		}
 
-		if ( method_exists( UserQuery::class, $name ) ) {
-			return UserQuery::make()->$name( ...$arguments );
-		}
-
-		throw new \BadMethodCallException( sprintf( 'Undefined static method %s::%s().', self::class, $name ) );
+		return ( new self() )->$name( ...$arguments );
 	}
 
 	/**
-	 * Support chained where() calls on the query builder.
+	 * Forward query-builder calls to UserQuery.
+	 *
+	 * Fluent builder calls return this facade so subsequent calls remain on
+	 * UsersModel. Terminal methods are implemented explicitly below.
 	 *
 	 * @param string $name      Method name.
 	 * @param array  $arguments Method arguments.
 	 * @return mixed
 	 */
 	public function __call( string $name, array $arguments ) {
-		if ( 'where' === $name && 2 <= count( $arguments ) ) {
-			return $this->addWhere( (string) $arguments[0], $arguments[1] );
-		}
-
-		throw new \BadMethodCallException( sprintf( 'Undefined method %s::%s().', self::class, $name ) );
-	}
-
-	/**
-	 * Add a user-meta equality condition to the query.
-	 *
-	 * @param string $key   Metadata key.
-	 * @param mixed  $value Metadata value.
-	 * @return static
-	 */
-	public function whereMeta( string $key, $value ): self {
-		$meta_query   = $this->query_args['meta_query'] ?? array();
-		$meta_query[] = array(
-			'key'     => $key,
-			'value'   => $value,
-			'compare' => '=',
-		);
-
-		$this->query_args['meta_query'] = $meta_query;
-
-		return $this;
-	}
-
-	/**
-	 * Set the maximum number of users returned.
-	 *
-	 * @param int $number Maximum number of users; -1 means no limit.
-	 * @return static
-	 */
-	public function limit( int $number ): self {
-		$this->query_args['number'] = -1 === $number ? -1 : max( 1, $number );
-
-		return $this;
-	}
-
-	/**
-	 * Set the query offset.
-	 *
-	 * @param int $offset Number of users to skip.
-	 * @return static
-	 */
-	public function offset( int $offset ): self {
-		$this->query_args['offset'] = max( 0, $offset );
-
-		return $this;
-	}
-
-	/**
-	 * Set query ordering.
-	 *
-	 * @param string $field Field to order by.
-	 * @param string $direction ASC or DESC.
-	 * @return static
-	 */
-	public function orderBy( string $field, string $direction = 'ASC' ): self {
-		$allowed = array(
-			'ID',
-			'user_login',
-			'user_nicename',
-			'user_email',
-			'user_registered',
-			'display_name',
-			'post_count',
-		);
-
-		if ( ! in_array( $field, $allowed, true ) ) {
-			_doing_it_wrong(
-				__METHOD__,
-				'Unsupported user ordering field.',
-				'1.0.0'
-			);
-
-			return $this;
-		}
-
-		$this->query_args['orderby'] = $field;
-		$this->query_args['order']   = 'DESC' === strtoupper( $direction ) ? 'DESC' : 'ASC';
-
-		return $this;
-	}
-
-	/**
-	 * Return the first matching user.
-	 *
-	 * @return static|null
-	 */
-	public function first(): ?self {
 		$this->assert_query();
 
-		$args            = $this->query_args;
-		$args['number']  = 1;
-		$args['offset']  = 0;
-		$args['fields']  = 'all';
-		$query           = new \WP_User_Query( $args );
-		$users           = $query->get_results();
-		$user             = $users[0] ?? null;
+		if ( ! method_exists( $this->query, $name ) || ( new \\ReflectionMethod( $this->query, $name ) )->isStatic() ) {
+			throw new \\BadMethodCallException( sprintf( 'Undefined method %s::%s().', self::class, $name ) );
+		}
 
-		return $user instanceof \WP_User ? new self( $user ) : null;
+		$result = $this->query->$name( ...$arguments );
+
+		return $result === $this->query ? $this : $result;
 	}
 
 	/**
-	 * Return all matching users as UsersModel instances.
+	 * Execute the query and return matching users or selected fields.
 	 *
-	 * @return array<int, static>
+	 * WP_User results are wrapped in UsersModel; other result shapes selected
+	 * through UserQuery::select() are passed through unchanged.
+	 *
+	 * @return array<int|string, mixed>
 	 */
 	public function get(): array {
 		$this->assert_query();
 
-		$args           = $this->query_args;
-		$args['fields'] = 'all';
-		$query          = new \WP_User_Query( $args );
-		$models         = array();
+		$results = $this->query->get();
+		$models  = array();
 
-		foreach ( $query->get_results() as $user ) {
-			if ( $user instanceof \WP_User ) {
-				$models[] = new self( $user );
-			}
+		foreach ( $results as $result ) {
+			$models[] = $result instanceof \\WP_User ? new self( $result ) : $result;
 		}
 
 		return $models;
 	}
 
 	/**
-	 * Create a user.
+	 * Return the first matching user or selected-field result.
 	 *
-	 * WordPress expects user_pass to be plain text; core hashes it before
-	 * storing it. The caller remains responsible for authorization and input
-	 * validation appropriate to the application.
+	 * @return mixed
+	 */
+	public function first() {
+		$this->assert_query();
+
+		$args           = $this->query->toArray();
+		$args['number'] = 1;
+		$args['offset'] = 0;
+
+		$query  = new \\WP_User_Query( $args );
+		$result = $query->get_results()[0] ?? null;
+
+		return $result instanceof \\WP_User ? new self( $result ) : $result;
+	}
+
+	/**
+	 * Count all users matching the query.
+	 *
+	 * @return int
+	 */
+	public function count(): int {
+		$this->assert_query();
+
+		return $this->query->count();
+	}
+
+	/**
+	 * Return the current WordPress query arguments without executing them.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function toArray(): array {
+		$this->assert_query();
+
+		return $this->query->toArray();
+	}
+
+	/**
+	 * Retrieve all users as UsersModel instances.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	public static function getAll(): array {
+		return self::make()->limit( -1 )->get();
+	}
+
+	/**
+	 * Create a user using the native WordPress API.
 	 *
 	 * @param array<string, mixed> $data User data accepted by wp_insert_user().
-	 * @return static|\WP_Error
+	 * @return static|\\WP_Error
 	 */
 	public static function create( array $data ) {
 		$user_id = wp_insert_user( $data );
@@ -299,14 +186,14 @@ class UsersModel {
 
 		return $model instanceof self
 			? $model
-			: new \WP_Error( 'epm_user_not_found', 'The user was created but could not be loaded.' );
+			: new \\WP_Error( 'epm_user_not_found', 'The user was created but could not be loaded.' );
 	}
 
 	/**
 	 * Update the wrapped user.
 	 *
 	 * @param array<string, mixed> $data User data accepted by wp_update_user().
-	 * @return bool|\WP_Error
+	 * @return bool|\\WP_Error
 	 */
 	public function update( array $data ) {
 		$this->assert_entity();
@@ -320,7 +207,7 @@ class UsersModel {
 
 		$updated_user = get_userdata( $this->user->ID );
 
-		if ( $updated_user instanceof \WP_User ) {
+		if ( $updated_user instanceof \\WP_User ) {
 			$this->user = $updated_user;
 		}
 
@@ -331,7 +218,7 @@ class UsersModel {
 	 * Delete the wrapped user.
 	 *
 	 * @param int|null $reassign Optional user ID to receive the deleted user's content.
-	 * @return bool|\WP_Error
+	 * @return bool|\\WP_Error
 	 */
 	public function delete( ?int $reassign = null ) {
 		$this->assert_entity();
@@ -346,8 +233,8 @@ class UsersModel {
 	/**
 	 * Get a user metadata value.
 	 *
-	 * @param string $key     Metadata key.
-	 * @param bool   $single  Return one value when true.
+	 * @param string $key    Metadata key.
+	 * @param bool   $single Return one value when true.
 	 * @return mixed
 	 */
 	public function meta( string $key, bool $single = true ) {
@@ -403,39 +290,39 @@ class UsersModel {
 	 * @return bool
 	 */
 	public function __isset( string $name ): bool {
-		return $this->user instanceof \WP_User && isset( $this->user->$name );
+		return $this->user instanceof \\WP_User && isset( $this->user->$name );
 	}
 
 	/**
 	 * Return the wrapped WP_User instance.
 	 *
-	 * @return \WP_User
+	 * @return \\WP_User
 	 */
-	public function toWordPressUser(): \WP_User {
+	public function toWordPressUser(): \\WP_User {
 		$this->assert_entity();
 
 		return $this->user;
 	}
 
 	/**
-	 * Ensure this instance is being used as a query builder.
+	 * Ensure this instance represents a query facade.
 	 *
 	 * @return void
 	 */
 	private function assert_query(): void {
-		if ( ! $this->is_query ) {
-			throw new \LogicException( 'This UsersModel instance represents a user, not a query.' );
+		if ( ! $this->query instanceof UserQuery ) {
+			throw new \\LogicException( 'This UsersModel instance represents a user, not a query.' );
 		}
 	}
 
 	/**
-	 * Ensure this instance represents a user.
+	 * Ensure this instance represents a loaded user.
 	 *
 	 * @return void
 	 */
 	private function assert_entity(): void {
-		if ( ! $this->user instanceof \WP_User ) {
-			throw new \LogicException( 'This operation requires a loaded user. Call find(), first(), or create() first.' );
+		if ( ! $this->user instanceof \\WP_User ) {
+			throw new \\LogicException( 'This operation requires a loaded user. Call find(), first(), or create() first.' );
 		}
 	}
 }
