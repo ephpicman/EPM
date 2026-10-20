@@ -10,222 +10,337 @@ namespace EPM\WordPress;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Fluent wrapper around WordPress's WP_User_Query.
+ * Fluent query builder that delegates query execution to WP_User_Query.
  *
- * This class only builds and executes user queries. It does not represent
- * individual users and is independent of EPM\Models\UsersModel.
+ * This class builds user-query arguments only. It does not represent a user
+ * entity and is independent of EPM\Models\UsersModel.
  */
 class UserQuery {
 
 	/**
 	 * Arguments passed to WP_User_Query.
 	 *
+	 * Starts empty; WordPress applies its own defaults when the query runs.
+	 *
 	 * @var array<string, mixed>
 	 */
-	private array $query_args = array(
-		'fields'      => 'all',
-		'count_total' => true,
-	);
+	private array $args = array();
 
 	/**
-	 * Create a user query.
-	 *
-	 * @param array<string, mixed> $args Initial WP_User_Query arguments.
+	 * Create a new user query builder.
 	 */
-	public function __construct( array $args = array() ) {
-		$this->query_args = array_merge( $this->query_args, $args );
-	}
+	public function __construct() {}
 
 	/**
-	 * Create a new query builder.
+	 * Create a new user query builder.
 	 *
-	 * @param array<string, mixed> $args Initial WP_User_Query arguments.
 	 * @return static
 	 */
-	public static function make( array $args = array() ): self {
-		return new self( $args );
+	public static function make(): self {
+		return new self();
 	}
 
 	/**
-	 * Set or replace one WP_User_Query argument.
+	 * Filter by a single role.
 	 *
-	 * This escape hatch allows callers to use any argument supported by
-	 * WP_User_Query without waiting for a dedicated convenience method.
-	 *
-	 * @param string $key Argument name.
-	 * @param mixed  $value Argument value.
+	 * @param string $role Role slug.
 	 * @return $this
 	 */
-	public function set( string $key, $value ): self {
-		$this->query_args[ $key ] = $value;
+	public function byRole( string $role ): self {
+		$this->args['role'] = $role;
 
 		return $this;
 	}
 
 	/**
-	 * Merge additional WP_User_Query arguments.
+	 * Filter by all of the specified roles.
 	 *
-	 * @param array<string, mixed> $args Query arguments.
+	 * WordPress's role argument requires users to have all specified roles.
+	 *
+	 * @param string[] $roles Role slugs.
 	 * @return $this
 	 */
-	public function args( array $args ): self {
-		$this->query_args = array_merge( $this->query_args, $args );
+	public function byRoles( array $roles ): self {
+		$this->args['role'] = $roles;
 
 		return $this;
 	}
 
 	/**
-	 * Filter users by role.
+	 * Filter by users having at least one of the specified roles.
 	 *
-	 * @param string|string[] $roles Role or roles.
+	 * @param string[] $roles Role slugs.
 	 * @return $this
 	 */
-	public function role( $roles ): self {
-		return $this->set( 'role', $roles );
+	public function inRoles( array $roles ): self {
+		$this->args['role__in'] = $roles;
+
+		return $this;
 	}
 
 	/**
-	 * Filter users by one or more roles.
+	 * Exclude users with a specific role.
 	 *
-	 * @param string[] $roles Roles to include.
+	 * @param string $role Role slug.
 	 * @return $this
 	 */
-	public function roles( array $roles ): self {
-		return $this->set( 'role__in', $roles );
+	public function avoidRole( string $role ): self {
+		$this->args['role__not_in'] = array( $role );
+
+		return $this;
 	}
 
 	/**
-	 * Filter users by IDs.
+	 * Exclude users with any of the specified roles.
 	 *
-	 * @param int[] $ids User IDs to include.
+	 * @param string[] $roles Role slugs.
 	 * @return $this
 	 */
-	public function include( array $ids ): self {
-		return $this->set( 'include', array_map( 'absint', $ids ) );
+	public function avoidRoles( array $roles ): self {
+		$this->args['role__not_in'] = $roles;
+
+		return $this;
 	}
 
 	/**
-	 * Exclude users by IDs.
+	 * Filter by a single user ID.
 	 *
-	 * @param int[] $ids User IDs to exclude.
+	 * @param int $id User ID.
 	 * @return $this
 	 */
-	public function exclude( array $ids ): self {
-		return $this->set( 'exclude', array_map( 'absint', $ids ) );
+	public function byId( int $id ): self {
+		$this->args['include'] = array( absint( $id ) );
+
+		return $this;
 	}
 
 	/**
-	 * Search supported user fields.
+	 * Filter by a list of user IDs.
 	 *
-	 * WordPress interprets this as a search term and supports partial matching.
+	 * @param int[] $ids User IDs.
+	 * @return $this
+	 */
+	public function byIds( array $ids ): self {
+		$this->args['include'] = array_map( 'absint', $ids );
+
+		return $this;
+	}
+
+	/**
+	 * Exclude a single user ID.
 	 *
-	 * @param string $term Search term.
-	 * @param string[] $columns Optional columns to search.
+	 * @param int $id User ID.
+	 * @return $this
+	 */
+	public function avoidId( int $id ): self {
+		$this->args['exclude'] = array( absint( $id ) );
+
+		return $this;
+	}
+
+	/**
+	 * Exclude a list of user IDs.
+	 *
+	 * @param int[] $ids User IDs.
+	 * @return $this
+	 */
+	public function avoidIds( array $ids ): self {
+		$this->args['exclude'] = array_map( 'absint', $ids );
+
+		return $this;
+	}
+
+	/**
+	 * Filter by an exact user login.
+	 *
+	 * @param string $login User login.
+	 * @return $this
+	 */
+	public function byLogin( string $login ): self {
+		$this->args['login'] = $login;
+
+		return $this;
+	}
+
+	/**
+	 * Filter by one of the specified user logins.
+	 *
+	 * @param string[] $logins User logins.
+	 * @return $this
+	 */
+	public function byLogins( array $logins ): self {
+		$this->args['login__in'] = $logins;
+
+		return $this;
+	}
+
+	/**
+	 * Exclude a user login.
+	 *
+	 * @param string $login User login.
+	 * @return $this
+	 */
+	public function avoidLogin( string $login ): self {
+		$this->args['login__not_in'] = array( $login );
+
+		return $this;
+	}
+
+	/**
+	 * Exclude the specified user logins.
+	 *
+	 * @param string[] $logins User logins.
+	 * @return $this
+	 */
+	public function avoidLogins( array $logins ): self {
+		$this->args['login__not_in'] = $logins;
+
+		return $this;
+	}
+
+	/**
+	 * Filter by an exact user nicename.
+	 *
+	 * @param string $nicename User nicename.
+	 * @return $this
+	 */
+	public function byNicename( string $nicename ): self {
+		$this->args['nicename'] = $nicename;
+
+		return $this;
+	}
+
+	/**
+	 * Filter by one of the specified user nicenames.
+	 *
+	 * @param string[] $nicenames User nicenames.
+	 * @return $this
+	 */
+	public function byNicenames( array $nicenames ): self {
+		$this->args['nicename__in'] = $nicenames;
+
+		return $this;
+	}
+
+	/**
+	 * Exclude a user nicename.
+	 *
+	 * @param string $nicename User nicename.
+	 * @return $this
+	 */
+	public function avoidNicename( string $nicename ): self {
+		$this->args['nicename__not_in'] = array( $nicename );
+
+		return $this;
+	}
+
+	/**
+	 * Exclude the specified user nicenames.
+	 *
+	 * @param string[] $nicenames User nicenames.
+	 * @return $this
+	 */
+	public function avoidNicenames( array $nicenames ): self {
+		$this->args['nicename__not_in'] = $nicenames;
+
+		return $this;
+	}
+
+	/**
+	 * Search user fields using WordPress's search behavior.
+	 *
+	 * @param string   $term Search term.
+	 * @param string[] $columns Optional search columns.
 	 * @return $this
 	 */
 	public function search( string $term, array $columns = array() ): self {
-		$this->query_args['search'] = $term;
+		$this->args['search'] = $term;
 
 		if ( ! empty( $columns ) ) {
-			$this->query_args['search_columns'] = $columns;
+			$this->args['search_columns'] = $columns;
 		}
 
 		return $this;
 	}
 
 	/**
-	 * Add a user-meta condition.
-	 *
-	 * @param string       $key     Meta key.
-	 * @param mixed        $value   Meta value.
-	 * @param string       $compare Comparison operator.
-	 * @param string       $type    Meta value type.
-	 * @param string|null  $compare_key Optional comparison operator for the meta key.
-	 * @return $this
-	 */
-	public function whereMeta(
-		string $key,
-		$value,
-		string $compare = '=',
-		string $type = 'CHAR',
-		?string $compare_key = null
-	): self {
-		$clause = array(
-			'key'     => $key,
-			'value'   => $value,
-			'compare' => $compare,
-			'type'    => $type,
-		);
-
-		if ( null !== $compare_key ) {
-			$clause['compare_key'] = $compare_key;
-		}
-
-		if ( ! isset( $this->query_args['meta_query'] ) || ! is_array( $this->query_args['meta_query'] ) ) {
-			$this->query_args['meta_query'] = array();
-		}
-
-		$this->query_args['meta_query'][] = $clause;
-
-		return $this;
-	}
-
-	/**
-	 * Set a complete meta query, including AND/OR relations.
-	 *
-	 * @param array<string|int, mixed> $meta_query WP_Meta_Query-compatible clauses.
-	 * @return $this
-	 */
-	public function metaQuery( array $meta_query ): self {
-		$this->query_args['meta_query'] = $meta_query;
-
-		return $this;
-	}
-
-	/**
-	 * Set ordering.
+	 * Set the result order.
 	 *
 	 * @param string $field WP_User_Query orderby value.
 	 * @param string $direction ASC or DESC.
 	 * @return $this
 	 */
 	public function orderBy( string $field, string $direction = 'ASC' ): self {
-		$this->query_args['orderby'] = $field;
-		$this->query_args['order']   = strtoupper( $direction ) === 'DESC' ? 'DESC' : 'ASC';
+		$this->args['orderby'] = $field;
+		$this->args['order']   = 'DESC' === strtoupper( $direction ) ? 'DESC' : 'ASC';
 
 		return $this;
 	}
 
 	/**
-	 * Set the maximum number of users returned.
+	 * Limit the number of returned users.
 	 *
-	 * @param int $number Maximum number of users. Use -1 for all users.
+	 * @param int $number Maximum number of users; -1 means no limit.
 	 * @return $this
 	 */
 	public function limit( int $number ): self {
-		return $this->set( 'number', $number );
+		$this->args['number'] = $number;
+
+		return $this;
 	}
 
 	/**
-	 * Set the result offset.
+	 * Skip a number of users.
 	 *
-	 * @param int $offset Number of users to skip.
+	 * @param int $number Number of users to skip.
 	 * @return $this
 	 */
-	public function offset( int $offset ): self {
-		return $this->set( 'offset', max( 0, $offset ) );
+	public function offset( int $number ): self {
+		$this->args['offset'] = max( 0, $number );
+
+		return $this;
 	}
 
 	/**
-	 * Set the result format supported by WP_User_Query.
+	 * Set the requested result fields.
 	 *
-	 * Common values are 'all', 'all_with_meta', 'ID', and 'id=>parent'.
-	 *
-	 * @param string $fields Result format.
+	 * @param string|string[] $fields WP_User_Query fields value.
 	 * @return $this
 	 */
-	public function fields( string $fields ): self {
-		return $this->set( 'fields', $fields );
+	public function fields( $fields ): self {
+		$this->args['fields'] = $fields;
+
+		return $this;
+	}
+
+	/**
+	 * Set whether WordPress should calculate the total result count.
+	 *
+	 * @param bool $count_total Whether to calculate the total.
+	 * @return $this
+	 */
+	public function countTotal( bool $count_total = true ): self {
+		$this->args['count_total'] = $count_total;
+
+		return $this;
+	}
+
+	/**
+	 * Retrieve the arguments accumulated by this builder.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function getArgs(): array {
+		return $this->args;
+	}
+
+	/**
+	 * Execute the query and return the WP_User_Query instance.
+	 *
+	 * @return \WP_User_Query
+	 */
+	public function run(): \WP_User_Query {
+		return new \WP_User_Query( $this->args );
 	}
 
 	/**
@@ -234,22 +349,20 @@ class UserQuery {
 	 * @return array<int|string, \WP_User|int|string>
 	 */
 	public function get(): array {
-		$query = new \WP_User_Query( $this->query_args );
-		$results = $query->get_results();
+		$results = $this->run()->get_results();
 
 		return is_array( $results ) ? $results : array();
 	}
 
 	/**
-	 * Execute the query and return the first result, if any.
+	 * Execute the query and return its first result, if any.
 	 *
 	 * @return \WP_User|int|string|null
 	 */
 	public function first() {
-		$args            = $this->query_args;
-		$args['number']  = 1;
-		$query           = new \WP_User_Query( $args );
-		$results         = $query->get_results();
+		$args           = $this->args;
+		$args['number'] = 1;
+		$results        = ( new \WP_User_Query( $args ) )->get_results();
 
 		if ( ! is_array( $results ) || empty( $results ) ) {
 			return null;
@@ -261,39 +374,15 @@ class UserQuery {
 	/**
 	 * Execute the query and return the total number of matching users.
 	 *
-	 * The total is not limited by the current number/offset pagination.
-	 *
 	 * @return int
 	 */
 	public function count(): int {
-		$args                = $this->query_args;
+		$args                = $this->args;
 		$args['fields']      = 'ID';
 		$args['number']      = 1;
 		$args['offset']      = 0;
 		$args['count_total'] = true;
 
-		$query = new \WP_User_Query( $args );
-
-		return (int) $query->get_total();
-	}
-
-	/**
-	 * Return the underlying WP_User_Query instance.
-	 *
-	 * Executes the query.
-	 *
-	 * @return \WP_User_Query
-	 */
-	public function run(): \WP_User_Query {
-		return new \WP_User_Query( $this->query_args );
-	}
-
-	/**
-	 * Retrieve the arguments that will be passed to WP_User_Query.
-	 *
-	 * @return array<string, mixed>
-	 */
-	public function getArgs(): array {
-		return $this->query_args;
+		return (int) ( new \WP_User_Query( $args ) )->get_total();
 	}
 }
