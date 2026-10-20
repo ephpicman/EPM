@@ -87,7 +87,7 @@ class UserQuery {
 	 * Create an empty user-query argument builder.
 	 *
 	 * No arguments are accepted. Configure the query using the fluent
-	 * methods, then retrieve the resulting arguments with getArgs().
+	 * methods, then retrieve the resulting arguments with toArray().
 	 */
 	public function __construct() {
 		$this->metaQuery = MetaQuery::make();
