@@ -5,7 +5,7 @@
  * @package EPM
  */
 
-namespace EPM\WordPress;
+namespace EPM\\WordPress;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * This class only builds the query-argument array. It does not execute a
  * query, return users, or represent a user entity. It is independent of
- * EPM\Models\UsersModel.
+ * EPM\\Models\\UsersModel.
  *
  * Each regular setter replaces the value previously assigned to its
  * corresponding argument key. Methods explicitly prefixed with "and" add
@@ -23,6 +23,27 @@ defined( 'ABSPATH' ) || exit;
  * @see https://developer.wordpress.org/reference/classes/wp_user_query/
  */
 class UserQuery {
+
+	/**
+	 * Native columns available in the WordPress {$wpdb->users} table.
+	 *
+	 * These are database column names, not all properties exposed by WP_User
+	 * and not user-meta keys.
+	 *
+	 * @var string[]
+	 */
+	public const USER_COLUMNS = array(
+		'ID',
+		'user_login',
+		'user_pass',
+		'user_nicename',
+		'user_email',
+		'user_url',
+		'user_registered',
+		'user_activation_key',
+		'user_status',
+		'display_name',
+	);
 
 	/** @var string|array Role requirement(s). */
 	private $role = null;
@@ -583,7 +604,7 @@ class UserQuery {
 	 * @return array<int|string, mixed>
 	 */
 	public function get(): array {
-		$query = new \WP_User_Query( $this->toArray() );
+		$query = new \\WP_User_Query( $this->toArray() );
 
 		return $query->get_results();
 	}
@@ -601,7 +622,7 @@ class UserQuery {
 		$args                = $this->toArray();
 		$args['count_total'] = true;
 
-		$query = new \WP_User_Query( $args );
+		$query = new \\WP_User_Query( $args );
 
 		return (int) $query->get_total();
 	}
