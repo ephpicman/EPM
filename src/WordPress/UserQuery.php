@@ -336,6 +336,8 @@ class UserQuery {
 
 		if ( ! empty( $columns ) ) {
 			$this->args['search_columns'] = $columns;
+		} else {
+			unset( $this->args['search_columns'] );
 		}
 
 		return $this;
