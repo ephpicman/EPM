@@ -7,7 +7,7 @@
 
 namespace EPM;
 
-\defined( 'ABSPATH' ) || exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Coordinates registered plugins and themes.
@@ -78,41 +78,10 @@ final class App {
 	/**
 	 * Run the application.
 	 *
-	 * For Ephpicman themes, use index.php as the sole theme entry point.
-	 * Other themes retain WordPress's default template hierarchy.
-	 *
 	 * @return void
 	 */
 	public function run(): void {
-		if ( ! \defined( 'EPHPICMAN_THEME_FILE' ) ) {
-			return;
-		}
-
-		$index_file = \dirname( \EPHPICMAN_THEME_FILE ) . '/index.php';
-
-		if ( ! \is_file( $index_file ) || ! \is_readable( $index_file ) ) {
-			return;
-		}
-
-		\add_action(
-			'template_redirect',
-			static function () use ( $index_file ): void {
-				// Preserve WordPress's special-purpose template handling.
-				if (
-					\is_feed()
-					|| \is_robots()
-					|| \is_trackback()
-					|| \is_embed()
-				) {
-					return;
-				}
-
-				// Render the Ephpicman entry point without resolving template hierarchy.
-				include $index_file;
-				exit;
-			},
-			\PHP_INT_MAX
-		);
+		// Application orchestration will be implemented here.
 	}
 
 	/**
