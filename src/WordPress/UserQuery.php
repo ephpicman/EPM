@@ -529,6 +529,49 @@ class UserQuery {
 	public function whereClause( array $clause, string $boolean = 'AND' ): self { $this->metaQuery->whereClause( $clause, $boolean ); return $this; }
 
 	/**
+	 * Execute the query and return its results.
+	 *
+	 * The current arguments, including metadata conditions, are passed to
+	 * WP_User_Query. The returned value follows WordPress' "fields" argument.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	public function get(): array {
+		$query = new \\WP_User_Query( $this->toArray() );
+
+		return $query->get_results();
+	}
+
+	/**
+	 * Return the total number of users matching this query.
+	 *
+	 * This counts all matching users, not only the users in the current page.
+	 * WordPress pagination arguments such as "number" and "offset" do not
+	 * limit this total.
+	 *
+	 * @return int
+	 */
+	public function count(): int {
+		$args                = $this->toArray();
+		$args['count_total'] = true;
+
+		$query = new \\WP_User_Query( $args );
+
+		return (int) $query->get_total();
+	}
+
+	/**
+	 * Retrieve all WordPress users.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	public static function getAll(): array {
+		return self::make()
+			->limit( -1 )
+			->get();
+	}
+
+	/**
 	 * Get the arguments built so far.
 	 *
 	 * Returns the current argument array without executing a query. The
