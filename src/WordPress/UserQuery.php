@@ -475,11 +475,25 @@ class UserQuery {
 
 	/** Add a metadata condition joined with AND. @return $this */
 	public function where( string $key, $operator, $value = null, string $type = 'CHAR' ): self {
-		$this->metaQuery->where( $key, $operator, $value, $type ); return $this;
+		if ( 2 === func_num_args() ) {
+			$this->metaQuery->where( $key, $operator );
+		} elseif ( 3 === func_num_args() ) {
+			$this->metaQuery->where( $key, $operator, $value );
+		} else {
+			$this->metaQuery->where( $key, $operator, $value, $type );
+		}
+		return $this;
 	}
 	/** Add a metadata condition joined with OR. @return $this */
 	public function orWhere( string $key, $operator, $value = null, string $type = 'CHAR' ): self {
-		$this->metaQuery->orWhere( $key, $operator, $value, $type ); return $this;
+		if ( 2 === func_num_args() ) {
+			$this->metaQuery->orWhere( $key, $operator );
+		} elseif ( 3 === func_num_args() ) {
+			$this->metaQuery->orWhere( $key, $operator, $value );
+		} else {
+			$this->metaQuery->orWhere( $key, $operator, $value, $type );
+		}
+		return $this;
 	}
 	/** @return $this */
 	public function whereIn( string $key, array $values, string $type = 'CHAR' ): self { $this->metaQuery->whereIn( $key, $values, $type ); return $this; }
