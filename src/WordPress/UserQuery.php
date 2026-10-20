@@ -329,8 +329,8 @@ class UserQuery {
 	 * @param string $term Search term.
 	 * @return $this
 	 */
-	public function whereLogin( string $term ): self {
-		return $this->whereColumn( $term, 'user_login' );
+	public function byLogin( string $term ): self {
+		return $this->byColumn( $term, 'user_login' );
 	}
 
 	/**
@@ -339,8 +339,8 @@ class UserQuery {
 	 * @param string $term Search term.
 	 * @return $this
 	 */
-	public function whereEmail( string $term ): self {
-		return $this->whereColumn( $term, 'user_email' );
+	public function byEmail( string $term ): self {
+		return $this->byColumn( $term, 'user_email' );
 	}
 
 	/**
@@ -349,8 +349,8 @@ class UserQuery {
 	 * @param string $term Search term.
 	 * @return $this
 	 */
-	public function whereUrl( string $term ): self {
-		return $this->whereColumn( $term, 'user_url' );
+	public function byUrl( string $term ): self {
+		return $this->byColumn( $term, 'user_url' );
 	}
 
 	/**
@@ -362,8 +362,8 @@ class UserQuery {
 	 * @param string $term Search term.
 	 * @return $this
 	 */
-	public function whereNicename( string $term ): self {
-		return $this->whereColumn( $term, 'user_nicename' );
+	public function byNicename( string $term ): self {
+		return $this->byColumn( $term, 'user_nicename' );
 	}
 
 	/**
@@ -372,21 +372,21 @@ class UserQuery {
 	 * @param string $term Search term.
 	 * @return $this
 	 */
-	public function whereDisplayName( string $term ): self {
-		return $this->whereColumn( $term, 'display_name' );
+	public function byDisplayName( string $term ): self {
+		return $this->byColumn( $term, 'display_name' );
 	}
 
 	/**
 	 * Set the native WordPress search term and its target column.
 	 *
-	 * This is an internal helper for the where*() methods. Each call replaces
+	 * This is an internal helper for the by*() methods. Each call replaces
 	 * the existing search term and search_columns setting.
 	 *
 	 * @param string $term   Search term.
 	 * @param string $column Native WP_User_Query search column.
 	 * @return $this
 	 */
-	private function whereColumn( string $term, string $column ): self {
+	private function byColumn( string $term, string $column ): self {
 		$this->args['search']         = $term;
 		$this->args['search_columns'] = array( $column );
 
