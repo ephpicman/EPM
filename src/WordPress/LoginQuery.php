@@ -11,9 +11,9 @@ declare(strict_types=1);
  * @since 1.0.0
  */
 
-namespace EPM\\WordPress;
+namespace EPM\WordPress;
 
-\\defined('ABSPATH') || exit;
+\defined('ABSPATH') || exit;
 
 /**
  * Fluent builder for login-related arguments accepted by WP_User_Query.
