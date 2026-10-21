@@ -48,7 +48,7 @@ class MetaQuery extends Query
 	 *
 	 * @return static
 	 */
-	public static function make(array $queryArray = []): static
+	public static function make(array $queryArray = [], array $args = []): static
 	{
 		return new static($queryArray);
 	}
