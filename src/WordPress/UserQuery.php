@@ -45,73 +45,46 @@ class UserQuery {
 		'display_name',
 	);
 
-	/** @var string|array Role requirement(s). */
-	private $role = null;
-
-	/** @var string[] Roles accepted by role__in. */
-	private array $roleIn = array();
-
-	/** @var string[] Roles excluded by role__not_in. */
-	private array $roleNotIn = array();
-
-	/** @var int[] Included user IDs. */
-	private array $include = array();
-
-	/** @var int[] Excluded user IDs. */
-	private array $exclude = array();
-
-	/** @var string User login filter. */
-	private ?string $login = null;
-
-	/** @var string[] Included user logins. */
-	private array $loginIn = array();
-
-	/** @var string[] Excluded user logins. */
-	private array $loginNotIn = array();
-
-	/** @var string User nicename filter. */
-	private ?string $nicename = null;
-
-	/** @var string[] Included nicenames. */
-	private array $nicenameIn = array();
-
-	/** @var string[] Excluded nicenames. */
-	private array $nicenameNotIn = array();
-
-	/** @var string Search term. */
-	private ?string $search = null;
-
-	/** @var string[] Search columns. */
-	private ?array $searchColumns = null;
+	private RoleQuery $roleQuery;
+	private IncludeExcludeQuery $includeExcludeQuery;
+	private LoginQuery $loginQuery;
+	private NameQuery $nameQuery;
+	private SearchQuery $searchQuery;
 
 	/** @var string Order-by field. */
 	private ?string $orderBy = null;
-
 	/** @var string Sort direction. */
 	private ?string $order = null;
-
 	/** @var int Maximum result count. */
 	private ?int $number = null;
-
 	/** @var int Result offset. */
 	private ?int $offset = null;
-
 	/** @var mixed Selected result fields. */
 	private $fields = null;
-
 	/** @var bool Whether WordPress should calculate the total result count. */
 	private ?bool $countTotal = null;
 
 	/** @var MetaQuery Builder for user metadata conditions. */
 	private MetaQuery $metaQuery;
 	/**
-	 * Create an empty user-query argument builder.
+	 * Create a user-query builder from existing WordPress query arguments.
 	 *
-	 * No arguments are accepted. Configure the query using the fluent
-	 * methods, then retrieve the resulting arguments with toArray().
+	 * @param array<string, mixed> $queryArray Existing WordPress query arguments.
 	 */
-	public function __construct() {
+	public function __construct(array $queryArray = []) {
+		$this->roleQuery = RoleQuery::make($queryArray);
+		$this->includeExcludeQuery = IncludeExcludeQuery::make($queryArray);
+		$this->loginQuery = LoginQuery::make($queryArray);
+		$this->nameQuery = NameQuery::make($queryArray);
+		$this->searchQuery = SearchQuery::make($queryArray);
 		$this->metaQuery = MetaQuery::make();
+
+		if (isset($queryArray['orderby'])) { $this->orderBy = $queryArray['orderby']; }
+		if (isset($queryArray['order'])) { $this->order = $queryArray['order']; }
+		if (isset($queryArray['number'])) { $this->number = (int) $queryArray['number']; }
+		if (isset($queryArray['offset'])) { $this->offset = (int) $queryArray['offset']; }
+		if (array_key_exists('fields', $queryArray)) { $this->fields = $queryArray['fields']; }
+		if (isset($queryArray['count_total'])) { $this->countTotal = (bool) $queryArray['count_total']; }
 	}
 
 	/**
@@ -119,8 +92,8 @@ class UserQuery {
 	 *
 	 * @return static
 	 */
-	public static function make(): self {
-		return new self();
+	public static function make(array $queryArray = []): self {
+		return new self($queryArray);
 	}
 
 	/** Filter users by one role. @return $this */
