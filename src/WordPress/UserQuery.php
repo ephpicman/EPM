@@ -123,345 +123,60 @@ class UserQuery {
 		return new self();
 	}
 
-	/**
-	 * Filter users by one role.
-	 *
-	 * Replaces any existing "role" argument. This is equivalent to calling
-	 * byRoles() with a one-item array.
-	 *
-	 * @param string $role WordPress role slug.
-	 * @return $this
-	 */
-	public function byRole( string $role ): self {
-		$this->role = $role;
+	/** Filter users by one role. @return $this */
+	public function byRole(string $role): self { $this->roleQuery->byRole($role); return $this; }
+	/** Require all specified roles. @return $this */
+	public function byRoles(array $roles): self { $this->roleQuery->byRoles($roles); return $this; }
+	/** Add AND-style role requirements. @return $this */
+	public function andInRoles(array $roles): self { $this->roleQuery->andInRoles($roles); return $this; }
+	/** Match any specified role. @return $this */
+	public function inRoles(array $roles): self { $this->roleQuery->inRoles($roles); return $this; }
+	/** Exclude one role. @return $this */
+	public function avoidRole(string $role): self { $this->roleQuery->avoidRole($role); return $this; }
+	/** Exclude specified roles. @return $this */
+	public function avoidRoles(array $roles): self { $this->roleQuery->avoidRoles($roles); return $this; }
 
-		return $this;
-	}
+	/** Include one user ID. @return $this */
+	public function byId(int $id): self { $this->includeExcludeQuery->byId($id); return $this; }
+	/** Include user IDs. @return $this */
+	public function byIds(array $ids): self { $this->includeExcludeQuery->byIds($ids); return $this; }
+	/** Exclude one user ID. @return $this */
+	public function avoidId(int $id): self { $this->includeExcludeQuery->avoidId($id); return $this; }
+	/** Exclude user IDs. @return $this */
+	public function avoidIds(array $ids): self { $this->includeExcludeQuery->avoidIds($ids); return $this; }
 
-	/**
-	 * Require users to have all specified roles.
-	 *
-	 * Replaces any existing "role" argument. WordPress interprets an array
-	 * supplied to "role" as roles the user must all have.
-	 *
-	 * @param string[] $roles WordPress role slugs.
-	 * @return $this
-	 */
-	public function byRoles( array $roles ): self {
-		$this->role = $roles;
+	/** Filter by exact login. @return $this */
+	public function byLogin(string $login): self { $this->loginQuery->byLogin($login); return $this; }
+	/** Filter by any specified login. @return $this */
+	public function byLogins(array $logins): self { $this->loginQuery->inLogins($logins); return $this; }
+	/** Exclude one login. @return $this */
+	public function avoidLogin(string $login): self { $this->loginQuery->avoidLogin($login); return $this; }
+	/** Exclude specified logins. @return $this */
+	public function avoidLogins(array $logins): self { $this->loginQuery->avoidLogins($logins); return $this; }
 
-		return $this;
-	}
+	/** Filter by exact nicename. @return $this */
+	public function byNicename(string $nicename): self { $this->nameQuery->byNicename($nicename); return $this; }
+	/** Filter by any specified nicename. @return $this */
+	public function byNicenames(array $nicenames): self { $this->nameQuery->inNicenames($nicenames); return $this; }
+	/** Exclude one nicename. @return $this */
+	public function avoidNicename(string $nicename): self { $this->nameQuery->avoidNicename($nicename); return $this; }
+	/** Exclude specified nicenames. @return $this */
+	public function avoidNicenames(array $nicenames): self { $this->nameQuery->avoidNicenames($nicenames); return $this; }
 
-	/**
-	 * Add role requirements without replacing existing role requirements.
-	 *
-	 * Roles are merged into the "role" argument and duplicate values are
-	 * removed. WordPress requires users to have every role in this argument.
-	 * If a "role" argument already exists, its current role or roles are
-	 * preserved and the supplied roles are added.
-	 *
-	 * This method adds an AND-style requirement; it does not append values
-	 * to "role__in". Use inRoles() when any one of several roles is enough.
-	 *
-	 * @param string[] $roles Additional role slugs that users must have.
-	 * @return $this
-	 */
-	public function andInRoles( array $roles ): self {
-		$current = $this->role ?? array();
-		$current = is_array( $current ) ? $current : array( $current );
+	/** Search users by login. @return $this */
+	public function searchByLogin(string $term): self { return $this->byColumn($term, 'user_login'); }
+	/** Search users by email. @return $this */
+	public function byEmail(string $term): self { return $this->byColumn($term, 'user_email'); }
+	/** Search users by URL. @return $this */
+	public function byUrl(string $term): self { return $this->byColumn($term, 'user_url'); }
+	/** Search users by nicename. @return $this */
+	public function searchByNicename(string $term): self { return $this->byColumn($term, 'user_nicename'); }
+	/** Search users by display name. @return $this */
+	public function byDisplayName(string $term): self { return $this->byColumn($term, 'display_name'); }
 
-		$this->role = array_values(
-			array_unique(
-				array_merge( $current, $roles )
-			)
-		);
-
-		return $this;
-	}
-
-	/**
-	 * Filter users who have at least one of the specified roles.
-	 *
-	 * Replaces any existing "role__in" argument. WordPress treats this as an
-	 * inclusion list: a user may match any one of the supplied roles.
-	 *
-	 * @param string[] $roles Role slugs; matching any one role is sufficient.
-	 * @return $this
-	 */
-	public function inRoles( array $roles ): self {
-		$this->roleIn = $roles;
-
-		return $this;
-	}
-
-	/**
-	 * Exclude users with one role.
-	 *
-	 * Replaces any existing "role__not_in" argument.
-	 *
-	 * @param string $role Role slug to exclude.
-	 * @return $this
-	 */
-	public function avoidRole( string $role ): self {
-		$this->roleNotIn = array( $role );
-
-		return $this;
-	}
-
-	/**
-	 * Exclude users with any of the specified roles.
-	 *
-	 * Replaces any existing "role__not_in" argument.
-	 *
-	 * @param string[] $roles Role slugs to exclude.
-	 * @return $this
-	 */
-	public function avoidRoles( array $roles ): self {
-		$this->roleNotIn = $roles;
-
-		return $this;
-	}
-
-	/**
-	 * Filter users by one user ID.
-	 *
-	 * Replaces any existing "include" argument.
-	 *
-	 * @param int $id User ID.
-	 * @return $this
-	 */
-	public function byId( int $id ): self {
-		$this->include = array( absint( $id ) );
-
-		return $this;
-	}
-
-	/**
-	 * Filter users by a list of user IDs.
-	 *
-	 * Replaces any existing "include" argument.
-	 *
-	 * @param int[] $ids User IDs.
-	 * @return $this
-	 */
-	public function byIds( array $ids ): self {
-		$this->include = array_map( 'absint', $ids );
-
-		return $this;
-	}
-
-	/**
-	 * Exclude one user ID.
-	 *
-	 * Replaces any existing "exclude" argument.
-	 *
-	 * @param int $id User ID to exclude.
-	 * @return $this
-	 */
-	public function avoidId( int $id ): self {
-		$this->exclude = array( absint( $id ) );
-
-		return $this;
-	}
-
-	/**
-	 * Exclude a list of user IDs.
-	 *
-	 * Replaces any existing "exclude" argument.
-	 *
-	 * @param int[] $ids User IDs to exclude.
-	 * @return $this
-	 */
-	public function avoidIds( array $ids ): self {
-		$this->exclude = array_map( 'absint', $ids );
-
-		return $this;
-	}
-
-	/**
-	 * Filter users by an exact user login.
-	 *
-	 * Replaces any existing "login" argument.
-	 *
-	 * @param string $login User login.
-	 * @return $this
-	 */
-	public function byLogin( string $login ): self {
-		$this->login = $login;
-
-		return $this;
-	}
-
-	/**
-	 * Filter users by one of the specified user logins.
-	 *
-	 * Replaces any existing "login__in" argument.
-	 *
-	 * @param string[] $logins User logins.
-	 * @return $this
-	 */
-	public function byLogins( array $logins ): self {
-		$this->loginIn = $logins;
-
-		return $this;
-	}
-
-	/**
-	 * Exclude one user login.
-	 *
-	 * Replaces any existing "login__not_in" argument.
-	 *
-	 * @param string $login User login to exclude.
-	 * @return $this
-	 */
-	public function avoidLogin( string $login ): self {
-		$this->loginNotIn = array( $login );
-
-		return $this;
-	}
-
-	/**
-	 * Exclude the specified user logins.
-	 *
-	 * Replaces any existing "login__not_in" argument.
-	 *
-	 * @param string[] $logins User logins to exclude.
-	 * @return $this
-	 */
-	public function avoidLogins( array $logins ): self {
-		$this->loginNotIn = $logins;
-
-		return $this;
-	}
-
-	/**
-	 * Filter users by an exact nicename.
-	 *
-	 * Replaces any existing "nicename" argument.
-	 *
-	 * @param string $nicename User nicename.
-	 * @return $this
-	 */
-	public function byNicename( string $nicename ): self {
-		$this->nicename = $nicename;
-
-		return $this;
-	}
-
-	/**
-	 * Filter users by one of the specified nicenames.
-	 *
-	 * Replaces any existing "nicename__in" argument.
-	 *
-	 * @param string[] $nicenames User nicenames.
-	 * @return $this
-	 */
-	public function byNicenames( array $nicenames ): self {
-		$this->nicenameIn = $nicenames;
-
-		return $this;
-	}
-
-	/**
-	 * Exclude one nicename.
-	 *
-	 * Replaces any existing "nicename__not_in" argument.
-	 *
-	 * @param string $nicename User nicename to exclude.
-	 * @return $this
-	 */
-	public function avoidNicename( string $nicename ): self {
-		$this->nicenameNotIn = array( $nicename );
-
-		return $this;
-	}
-
-	/**
-	 * Exclude the specified nicenames.
-	 *
-	 * Replaces any existing "nicename__not_in" argument.
-	 *
-	 * @param string[] $nicenames User nicenames to exclude.
-	 * @return $this
-	 */
-	public function avoidNicenames( array $nicenames ): self {
-		$this->nicenameNotIn = $nicenames;
-
-		return $this;
-	}
-
-	/**
-	 * Search users by their login column.
-	 *
-	 * Sets the native WP_User_Query search term and restricts search_columns
-	 * to user_login. Replaces any previously configured search term and
-	 * search columns. This searches a native users-table column, not user meta.
-	 *
-	 * @param string $term Search term.
-	 * @return $this
-	 */
-	public function searchByLogin( string $term ): self {
-		return $this->byColumn( $term, 'user_login' );
-	}
-
-	/**
-	 * Search users by their email column.
-	 *
-	 * @param string $term Search term.
-	 * @return $this
-	 */
-	public function byEmail( string $term ): self {
-		return $this->byColumn( $term, 'user_email' );
-	}
-
-	/**
-	 * Search users by their URL column.
-	 *
-	 * @param string $term Search term.
-	 * @return $this
-	 */
-	public function byUrl( string $term ): self {
-		return $this->byColumn( $term, 'user_url' );
-	}
-
-	/**
-	 * Search users by their nicename column.
-	 *
-	 * WordPress calls this field "user_nicename"; it is not the user's
-	 * display name and is not a user-meta field.
-	 *
-	 * @param string $term Search term.
-	 * @return $this
-	 */
-	public function searchByNicename( string $term ): self {
-		return $this->byColumn( $term, 'user_nicename' );
-	}
-
-	/**
-	 * Search users by their display-name column.
-	 *
-	 * @param string $term Search term.
-	 * @return $this
-	 */
-	public function byDisplayName( string $term ): self {
-		return $this->byColumn( $term, 'display_name' );
-	}
-
-	/**
-	 * Set the native WordPress search term and its target column.
-	 *
-	 * This is an internal helper for the by*() methods. Each call replaces
-	 * the existing search term and search_columns setting.
-	 *
-	 * @param string $term   Search term.
-	 * @param string $column Native WP_User_Query search column.
-	 * @return $this
-	 */
-	private function byColumn( string $term, string $column ): self {
-		$this->search         = $term;
-		$this->searchColumns = array( $column );
-
+	/** Set search term and target column. @return $this */
+	private function byColumn(string $term, string $column): self {
+		$this->searchQuery->byColumn($term, $column);
 		return $this;
 	}
 
@@ -682,45 +397,14 @@ class UserQuery {
 	public function toArray(): array {
 		$args = array();
 
-		if ( null !== $this->role ) {
-			$args['role'] = $this->role;
-		}
-		if ( ! empty( $this->roleIn ) ) {
-			$args['role__in'] = $this->roleIn;
-		}
-		if ( ! empty( $this->roleNotIn ) ) {
-			$args['role__not_in'] = $this->roleNotIn;
-		}
-		if ( ! empty( $this->include ) ) {
-			$args['include'] = $this->include;
-		}
-		if ( ! empty( $this->exclude ) ) {
-			$args['exclude'] = $this->exclude;
-		}
-		if ( null !== $this->login ) {
-			$args['login'] = $this->login;
-		}
-		if ( ! empty( $this->loginIn ) ) {
-			$args['login__in'] = $this->loginIn;
-		}
-		if ( ! empty( $this->loginNotIn ) ) {
-			$args['login__not_in'] = $this->loginNotIn;
-		}
-		if ( null !== $this->nicename ) {
-			$args['nicename'] = $this->nicename;
-		}
-		if ( ! empty( $this->nicenameIn ) ) {
-			$args['nicename__in'] = $this->nicenameIn;
-		}
-		if ( ! empty( $this->nicenameNotIn ) ) {
-			$args['nicename__not_in'] = $this->nicenameNotIn;
-		}
-		if ( null !== $this->search ) {
-			$args['search'] = $this->search;
-		}
-		if ( null !== $this->searchColumns ) {
-			$args['search_columns'] = $this->searchColumns;
-		}
+		$args = array_merge(
+			$this->roleQuery->toArray(),
+			$this->includeExcludeQuery->toArray(),
+			$this->loginQuery->toArray(),
+			$this->nameQuery->toArray(),
+			$this->searchQuery->toArray()
+		);
+
 		if ( null !== $this->orderBy ) {
 			$args['orderby'] = $this->orderBy;
 		}
