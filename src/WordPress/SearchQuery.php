@@ -9,39 +9,55 @@ namespace EPM\\WordPress;
 /**
  * Builds search-related arguments for a WordPress query.
  *
- * Stores the search term and the allowed search columns, then converts them
- * to the argument names expected by WordPress.
+ * Encapsulates a search term and the columns in which the search should be
+ * performed. Requested columns are validated against an explicitly supplied
+ * allowlist before the configuration is converted to WordPress query arguments.
+ *
+ * @see WP_Query
+ * @see WP_User_Query
  */
 class SearchQuery extends Query
 {
     /**
-     * Search term to match.
+     * The search term.
      *
-     * A null value means no search term is configured.
+     * A null value indicates that no search term is configured. Passing an
+     * empty string to search() resets this property to null.
+     *
+     * @var string|null
      */
     protected ?string $search = null;
 
     /**
-     * Validated columns to search.
+     * The validated columns to search.
+     *
+     * Contains unique column names accepted by the configured allowlist.
+     * An empty array indicates that no search columns are configured.
      *
      * @var array<int, string>
      */
     protected array $searchColumns = [];
 
     /**
-     * Column names permitted for searching.
+     * The column names permitted for searching.
+     *
+     * This allowlist is supplied during construction and is used to validate
+     * values passed to searchColumns(). Duplicate entries are removed while
+     * preserving the order of their first occurrence.
      *
      * @var array<int, string>
      */
     protected array $allowedSearchColumns;
 
     /**
-     * Create a search query and optionally initialize it from an array.
+     * Initialise the search query.
      *
-     * Duplicate allowed column names are removed while preserving their order.
+     * Recognised query-array keys are search and searchColumns. Initial values
+     * are applied through the corresponding setter methods; unrecognised keys
+     * are ignored.
      *
      * @param array<int, string> $allowedSearchColumns Column names permitted for searching.
-     * @param array<string, mixed> $queryArray         Initial search values.
+     * @param array<string, mixed> $queryArray Initial search configuration.
      */
     public function __construct(array $allowedSearchColumns, array $queryArray = [])
     {
@@ -59,14 +75,17 @@ class SearchQuery extends Query
     }
 
     /**
-     * Create an instance using the allowed columns supplied in the arguments.
+     * Create an instance from query values and construction arguments.
      *
-     * The $args array must contain an 'allowedSearchColumns' entry.
+     * The $args array must contain an allowedSearchColumns entry defining the
+     * columns that may be selected.
      *
-     * @param array<string, mixed> $queryArray Initial search values.
-     * @param array<string, mixed> $args       Additional construction arguments.
+     * @param array<string, mixed> $queryArray Initial search configuration.
+     * @param array<string, mixed> $args Additional construction arguments.
      *
-     * @throws \\InvalidArgumentException If allowed search columns are not provided.
+     * @return static A new search query instance.
+     *
+     * @throws \\InvalidArgumentException If allowedSearchColumns is missing.
      */
     public static function make(array $queryArray = [], array $args = []): static
     {
@@ -85,11 +104,11 @@ class SearchQuery extends Query
     /**
      * Set the search term.
      *
-     * An empty string clears the search term.
+     * Passing an empty string clears the configured search term.
      *
-     * @param string $value Search term.
+     * @param string $value The search term.
      *
-     * @return self This query instance.
+     * @return self The current instance for method chaining.
      */
     public function search(string $value): self
     {
@@ -99,14 +118,15 @@ class SearchQuery extends Query
     }
 
     /**
-     * Set the columns to search.
+     * Set the columns in which the search should be performed.
      *
-     * Each value must be a string present in the allowed-column list.
-     * Empty strings are filtered out; duplicate values are removed.
+     * Accepts a single column name or an array of column names. Every value
+     * must be a string present in the configured allowlist. Duplicate values
+     * are removed while preserving their first occurrence.
      *
-     * @param string|array<int, string> $value One column name or a list of names.
+     * @param string|array<int, string> $value A column name or an array of names.
      *
-     * @return self This query instance.
+     * @return self The current instance for method chaining.
      *
      * @throws \\InvalidArgumentException If a value is not a string or is not allowed.
      */
@@ -144,12 +164,13 @@ class SearchQuery extends Query
     }
 
     /**
-     * Convert the configured values to WordPress query arguments.
+     * Convert the configured search values to WordPress query arguments.
      *
-     * The internal camelCase property searchColumns is exported as the
-     * WordPress argument search_columns. Unset values are omitted.
+     * The internal searchColumns property is exported using the WordPress
+     * argument name search_columns. Properties that are not configured are
+     * omitted from the resulting array.
      *
-     * @return array<string, string|array<int, string>> WordPress search arguments.
+     * @return array<string, string|array<int, string>> The configured WordPress search arguments.
      */
     public function toArray(): array
     {
