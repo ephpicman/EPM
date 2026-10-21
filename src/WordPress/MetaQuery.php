@@ -3,14 +3,18 @@
 declare(strict_types=1);
 
 /**
- * EphpicMan's metadata query builder.
+ * Builds WordPress-compatible metadata query arguments.
  *
- * @package   EPM
- * @version   1.0.0
- * @author    Sina Kuhestani <sinakuhestani@gmail.com>
- * @license   MIT
- * @copyright 2026 Sina Kuhestani
- * @since     1.0.0
+ * Provides a fluent interface for adding metadata conditions, combining them
+ * with AND/OR relations, and creating nested condition groups. The builder
+ * constructs the meta_query array only; it does not execute a WordPress query.
+ *
+ * @package EPM
+ * @since   1.0.0
+ *
+ * @see https://developer.wordpress.org/reference/classes/wp_meta_query/
+ * @see https://developer.wordpress.org/reference/classes/wp_query/
+ * @see https://developer.wordpress.org/reference/classes/wp_user_query/
  */
 
 namespace EPM\WordPress;
@@ -18,10 +22,11 @@ namespace EPM\WordPress;
 \defined('ABSPATH') || exit;
 
 /**
- * Fluent builder for the meta_query argument accepted by WordPress query APIs.
+ * Fluent builder for the meta_query argument used by WordPress query APIs.
  *
- * The query property always contains a valid WordPress meta-query structure.
- * The builder creates query arguments only; it does not execute a query.
+ * Conditions are stored as a WordPress-compatible metadata-query array and
+ * returned by toArray(). Methods are chainable. This class does not validate
+ * every clause against WordPress or execute the resulting query.
  *
  * @see https://developer.wordpress.org/reference/classes/wp_meta_query/
  */
@@ -29,14 +34,21 @@ class MetaQuery extends Query
 {
 
 	/**
-	 * WordPress-compatible metadata query structure.
+	 * The current WordPress-compatible metadata-query structure.
+	 *
+	 * May contain individual clauses, a relation key, or nested clause groups.
+	 * The array is returned as-is by toArray().
 	 *
 	 * @var array<string|int, mixed>
 	 */
 	private array $query = [];
 
 	/**
-	 * Create an empty metadata-query builder.
+	 * Initialise the builder with an optional metadata-query array.
+	 *
+	 * The supplied array is stored without normalisation or validation.
+	 *
+	 * @param array<string|int, mixed> $queryArray Existing metadata-query structure.
 	 */
 	public function __construct(array $queryArray = [])
 	{
@@ -44,9 +56,15 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Create a new empty metadata-query builder.
+	 * Create a builder from an optional metadata-query array.
 	 *
-	 * @return static
+	 * The args parameter is accepted to satisfy the shared Query factory
+	 * signature; this implementation does not use it.
+	 *
+	 * @param array<string|int, mixed> $queryArray Initial metadata-query structure.
+	 * @param array<string, mixed> $args Unused additional arguments.
+	 *
+	 * @return static A new builder instance.
 	 */
 	public static function make(array $queryArray = [], array $args = []): static
 	{
@@ -54,17 +72,22 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a metadata condition joined with AND.
+	 * Add a metadata comparison joined to the current expression with AND.
 	 *
-	 * Usage:
-	 * - where( 'age', '>=', 18, 'NUMERIC' )
-	 * - where( 'status', 'active' )
+	 * In the two-argument shorthand, the second argument is treated as the
+	 * value and the comparison operator defaults to equals. Otherwise, the
+	 * arguments map to WordPress clause keys key, compare, value, and type.
 	 *
-	 * @param string $key      Metadata key.
-	 * @param mixed  $operator Comparison operator, or value in shorthand form.
-	 * @param mixed  $value    Value to compare.
-	 * @param string $type     WordPress metadata value type.
-	 * @return $this
+	 * Examples:
+	 * - where('age', '>=', 18, 'NUMERIC')
+	 * - where('status', 'active')
+	 *
+	 * @param string $key Metadata key.
+	 * @param mixed $operator Comparison operator, or value in shorthand form.
+	 * @param mixed $value Value to compare when an operator is supplied.
+	 * @param string $type WordPress metadata value type; defaults to CHAR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function where(string $key, $operator, $value = null, string $type = 'CHAR'): self
 	{
@@ -85,13 +108,17 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a metadata condition joined with OR.
+	 * Add a metadata comparison joined to the current expression with OR.
 	 *
-	 * @param string $key      Metadata key.
-	 * @param mixed  $operator Comparison operator, or value in shorthand form.
-	 * @param mixed  $value    Value to compare.
-	 * @param string $type     WordPress metadata value type.
-	 * @return $this
+	 * Supports the same two-argument shorthand as where(), where the second
+	 * argument becomes the value and the comparison operator defaults to equals.
+	 *
+	 * @param string $key Metadata key.
+	 * @param mixed $operator Comparison operator, or value in shorthand form.
+	 * @param mixed $value Value to compare when an operator is supplied.
+	 * @param string $type WordPress metadata value type; defaults to CHAR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function orWhere(string $key, $operator, $value = null, string $type = 'CHAR'): self
 	{
@@ -112,12 +139,15 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add an IN metadata condition.
+	 * Add a metadata condition matching any value in the supplied list.
 	 *
-	 * @param string $key    Metadata key.
-	 * @param array  $values Values to match.
-	 * @param string $type   WordPress metadata value type.
-	 * @return $this
+	 * Creates a clause using WordPress's IN comparison operator.
+	 *
+	 * @param string $key Metadata key.
+	 * @param array<int|string, mixed> $values Values to match.
+	 * @param string $type WordPress metadata value type; defaults to CHAR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereIn(string $key, array $values, string $type = 'CHAR'): self
 	{
@@ -125,12 +155,15 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a NOT IN metadata condition.
+	 * Add a metadata condition excluding values in the supplied list.
 	 *
-	 * @param string $key    Metadata key.
-	 * @param array  $values Values to exclude.
-	 * @param string $type   WordPress metadata value type.
-	 * @return $this
+	 * Creates a clause using WordPress's NOT IN comparison operator.
+	 *
+	 * @param string $key Metadata key.
+	 * @param array<int|string, mixed> $values Values to exclude.
+	 * @param string $type WordPress metadata value type; defaults to CHAR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereNotIn(string $key, array $values, string $type = 'CHAR'): self
 	{
@@ -138,12 +171,15 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a BETWEEN metadata condition.
+	 * Add a metadata condition matching values within a range.
 	 *
-	 * @param string $key    Metadata key.
-	 * @param array  $values Two boundary values.
-	 * @param string $type   WordPress metadata value type.
-	 * @return $this
+	 * Creates a clause using WordPress's BETWEEN comparison operator.
+	 *
+	 * @param string $key Metadata key.
+	 * @param array<int|string, mixed> $values Range boundary values.
+	 * @param string $type WordPress metadata value type; defaults to CHAR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereBetween(string $key, array $values, string $type = 'CHAR'): self
 	{
@@ -151,12 +187,15 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a NOT BETWEEN metadata condition.
+	 * Add a metadata condition matching values outside a range.
 	 *
-	 * @param string $key    Metadata key.
-	 * @param array  $values Two boundary values.
-	 * @param string $type   WordPress metadata value type.
-	 * @return $this
+	 * Creates a clause using WordPress's NOT BETWEEN comparison operator.
+	 *
+	 * @param string $key Metadata key.
+	 * @param array<int|string, mixed> $values Range boundary values.
+	 * @param string $type WordPress metadata value type; defaults to CHAR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereNotBetween(string $key, array $values, string $type = 'CHAR'): self
 	{
@@ -164,11 +203,14 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a LIKE metadata condition.
+	 * Add a metadata condition using WordPress's LIKE comparison operator.
 	 *
-	 * @param string $key   Metadata key.
-	 * @param string $value Value or pattern to search for.
-	 * @return $this
+	 * Wildcard handling follows WordPress's metadata-query behaviour.
+	 *
+	 * @param string $key Metadata key.
+	 * @param string $value Value or pattern to match.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereLike(string $key, string $value): self
 	{
@@ -176,11 +218,12 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a NOT LIKE metadata condition.
+	 * Add a metadata condition using WordPress's NOT LIKE comparison operator.
 	 *
-	 * @param string $key   Metadata key.
+	 * @param string $key Metadata key.
 	 * @param string $value Value or pattern to exclude.
-	 * @return $this
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereNotLike(string $key, string $value): self
 	{
@@ -188,11 +231,12 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a REGEXP metadata condition.
+	 * Add a metadata condition using WordPress's REGEXP operator.
 	 *
-	 * @param string $key     Metadata key.
-	 * @param string $pattern Regular expression.
-	 * @return $this
+	 * @param string $key Metadata key.
+	 * @param string $pattern Regular-expression pattern to match.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereRegexp(string $key, string $pattern): self
 	{
@@ -200,11 +244,12 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a NOT REGEXP metadata condition.
+	 * Add a metadata condition using WordPress's NOT REGEXP operator.
 	 *
-	 * @param string $key     Metadata key.
-	 * @param string $pattern Regular expression.
-	 * @return $this
+	 * @param string $key Metadata key.
+	 * @param string $pattern Regular-expression pattern to exclude.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereNotRegexp(string $key, string $pattern): self
 	{
@@ -212,10 +257,13 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Match records where the specified metadata key exists.
+	 * Add a condition requiring the metadata key to exist.
 	 *
-	 * @param string $key Metadata key.
-	 * @return $this
+	 * Creates a clause with the EXISTS comparison operator and no value.
+	 *
+	 * @param string $key Metadata key that must exist.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereExists(string $key): self
 	{
@@ -229,10 +277,13 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Match records where the specified metadata key does not exist.
+	 * Add a condition requiring the metadata key not to exist.
 	 *
-	 * @param string $key Metadata key.
-	 * @return $this
+	 * Creates a clause with the NOT EXISTS comparison operator.
+	 *
+	 * @param string $key Metadata key that must not exist.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereNotExists(string $key): self
 	{
@@ -246,14 +297,17 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Match records where the metadata key itself satisfies a comparison.
+	 * Add a clause that compares the metadata key rather than its value.
 	 *
-	 * Uses WP_Meta_Query's compare_key and type_key arguments.
+	 * Uses WordPress's compare_key argument and optionally type_key. The clause
+	 * also sets compare to EXISTS; support for these options depends on the
+	 * WordPress version and query context.
 	 *
-	 * @param string $key        Metadata key or key pattern.
-	 * @param string $comparison Key comparison operator.
-	 * @param string $type       Key type, where supported by WordPress.
-	 * @return $this
+	 * @param string $key Metadata key or key pattern.
+	 * @param string $comparison Key comparison operator; defaults to equals.
+	 * @param string $type Optional key type passed as type_key.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereMetaKey(string $key, string $comparison = '=', string $type = ''): self
 	{
@@ -271,11 +325,16 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a nested condition group.
+	 * Add a nested group joined to the current expression with AND.
 	 *
-	 * @param callable $callback Receives the nested MetaQuery builder.
-	 * @param string   $relation Relation inside the group: AND or OR.
-	 * @return $this
+	 * The callback receives a fresh MetaQuery builder. The relation argument
+	 * controls how conditions inside the group are combined; values other than
+	 * OR default to AND.
+	 *
+	 * @param callable $callback Receives the nested builder.
+	 * @param string $relation Relation inside the group: AND or OR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereGroup(callable $callback, string $relation = 'AND'): self
 	{
@@ -283,11 +342,16 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a nested condition group joined to the current expression with OR.
+	 * Add a nested group joined to the current expression with OR.
 	 *
-	 * @param callable $callback Receives the nested MetaQuery builder.
-	 * @param string   $relation Relation inside the group: AND or OR.
-	 * @return $this
+	 * The callback receives a fresh MetaQuery builder. The relation argument
+	 * controls how conditions inside the group are combined; values other than
+	 * OR default to AND.
+	 *
+	 * @param callable $callback Receives the nested builder.
+	 * @param string $relation Relation inside the group: AND or OR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function orWhereGroup(callable $callback, string $relation = 'AND'): self
 	{
@@ -295,10 +359,13 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a group whose conditions are joined with OR, joined to this expression with AND.
+	 * Add a nested group whose conditions are joined with OR.
 	 *
-	 * @param callable $callback Receives the nested MetaQuery builder.
-	 * @return $this
+	 * The group itself is joined to the current expression with AND.
+	 *
+	 * @param callable $callback Receives the nested builder.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereAny(callable $callback): self
 	{
@@ -306,10 +373,13 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a group whose conditions are joined with AND, joined to this expression with AND.
+	 * Add a nested group whose conditions are joined with AND.
 	 *
-	 * @param callable $callback Receives the nested MetaQuery builder.
-	 * @return $this
+	 * The group itself is also joined to the current expression with AND.
+	 *
+	 * @param callable $callback Receives the nested builder.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereAll(callable $callback): self
 	{
@@ -317,14 +387,16 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a complete WordPress metadata clause.
+	 * Add a raw WordPress metadata clause.
 	 *
-	 * The clause is passed through unchanged, supporting WP_Meta_Query arguments not otherwise exposed by dedicated
-	 * methods.
+	 * The clause is passed to the clause-composition logic without validating
+	 * or rewriting its keys. Use this for WordPress options not exposed by a
+	 * dedicated builder method.
 	 *
-	 * @param array<string, mixed> $clause  WordPress metadata clause.
-	 * @param string               $boolean Boolean joining this clause: AND/OR.
-	 * @return $this
+	 * @param array<string, mixed> $clause WordPress metadata clause.
+	 * @param string $boolean Relation to this clause: AND or OR.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	public function whereClause(array $clause, string $boolean = 'AND'): self
 	{
@@ -332,14 +404,17 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Add a clause to the WordPress-compatible query structure.
+	 * Compose a clause into the current query structure.
 	 *
-	 * AND conditions are added to the current final AND branch. OR conditions start a new branch. The property remains
-	 * in WP_Meta_Query array format after every call.
+	 * The boolean is normalised to OR only when its upper-case value is exactly
+	 * OR; all other values are treated as AND. OR clauses may wrap the existing
+	 * expression in an OR group, while AND clauses are appended to or grouped
+	 * with the current structure.
 	 *
-	 * @param array<string|int, mixed> $clause  Clause or nested group.
-	 * @param string                   $boolean Boolean joining this clause.
-	 * @return $this
+	 * @param array<string|int, mixed> $clause Clause or nested group to add.
+	 * @param string $boolean Relation joining the clause.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	private function addClause(array $clause, string $boolean): self
 	{
@@ -395,12 +470,17 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Build and add a nested group using a child builder.
+	 * Build a nested group and add it to the current query.
 	 *
-	 * @param callable $callback Callback receiving the child builder.
-	 * @param string   $relation Relation inside the group.
-	 * @param string   $boolean  Relation between this group and its siblings.
-	 * @return $this
+	 * A fresh builder is passed to the callback. Empty groups are ignored. The
+	 * group's relation defaults to AND unless OR is requested. The boolean
+	 * argument controls how the resulting group joins the existing expression.
+	 *
+	 * @param callable $callback Callback that configures the child builder.
+	 * @param string $relation Relation between conditions inside the group.
+	 * @param string $boolean Relation joining the group to the current query.
+	 *
+	 * @return $this The current builder instance.
 	 */
 	private function addGroup(callable $callback, string $relation, string $boolean): self
 	{
@@ -428,11 +508,13 @@ class MetaQuery extends Query
 	}
 
 	/**
-	 * Return the WordPress-compatible meta_query array.
+	 * Return the current WordPress-compatible metadata-query array.
 	 *
-	 * The query property is already kept in its final structure.
+	 * Returns the internal structure directly, without copying, normalising,
+	 * or validating it. The result can be assigned to a WordPress query's
+	 * meta_query argument.
 	 *
-	 * @return array<string|int, mixed>
+	 * @return array<string|int, mixed> The metadata-query structure.
 	 */
 	public function toArray(): array
 	{
