@@ -25,7 +25,7 @@ namespace EPM\WordPress;
  *
  * @see https://developer.wordpress.org/reference/classes/wp_meta_query/
  */
-class MetaQuery
+class MetaQuery extends Query
 {
 
 	/**
@@ -38,8 +38,9 @@ class MetaQuery
 	/**
 	 * Create an empty metadata-query builder.
 	 */
-	public function __construct()
+	public function __construct(array $queryArray = [])
 	{
+		$this->query = $queryArray;
 	}
 
 	/**
@@ -47,9 +48,9 @@ class MetaQuery
 	 *
 	 * @return static
 	 */
-	public static function make(): self
+	public static function make(array $queryArray = []): static
 	{
-		return new self();
+		return new static($queryArray);
 	}
 
 	/**
