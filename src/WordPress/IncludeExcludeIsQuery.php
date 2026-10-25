@@ -1,22 +1,59 @@
 <?php
 
+/*
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ EPM — EphpicMan Framework                                                                                            │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                      │
+│ Modification Restrictions:                                                                                           │
+│                                                                                                                      │
+│ @lock-name        The member's name must not change.                                                                 │
+│ @lock-body        The method implementation must not change.                                                         │
+│ @lock-params      Existing parameters must not change. Additional optional parameters may be appended at the end,    │
+│                   provided backward compatibility is preserved.                                                      │
+│ @lock-signature   The method signature, including parameters and return type, must not change.                       │
+│ @lock-type        The declared type must not change. For methods, this refers to the return type.                    │
+│ @lock-value       Constant values and property default values must not change.                                       │
+│ @lock-access      The member's visibility must not change.                                                           │
+│ @lock-static      The member's static status must not change.                                                        │
+│ @lock-final       The member's final status must not change.                                                         │
+│ @lock-abstract    The class or method's abstract status must not change.                                             │
+│ @lock             The member must not be modified, renamed or removed.                                               │
+│                                                                                                                      │
+│ - Apply restriction tags to the class or individual members as appropriate.                                          │
+│ - Unspecified modifications are allowed.                                                                             │
+│ - When multiple tags apply, all restrictions must be respected.                                                      │
+│ - @lock overrides all other tags and prohibits every modification to the target.                                     │
+│                                                                                                                      │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                      │
+│ This file is part of EPM, the EphpicMan Framework.                                                                   │
+│                                                                                                                      │
+│ Copyright (c) Sina Kuhestani (EphpicMan).                                                                            │
+│ Licensed under the MIT License. See the LICENSE file for details.                                                    │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+
 declare(strict_types=1);
 
-namespace EPM\\WordPress;
+namespace EPM\WordPress;
+
+use InvalidArgumentException;
 
 /**
- * Builds a query value with optional include/exclude lists and an additional
- * string value or list of string values under the 'is' key.
+ * Builds a query value with optional include/exclude lists and an additional string value or list of string values
+ * under the 'is' key.
  *
  * The 'is' value can be configured for single-value or multi-value mode.
  * Include/exclude behavior is inherited from IncludeExcludeQuery.
  */
-\\defined('ABSPATH') || exit;
 
 class IncludeExcludeIsQuery extends IncludeExcludeQuery
 {
     /**
      * Whether the 'is' value accepts a list of strings instead of one string.
+     * 
+     * @var bool
      */
     protected bool $multiValue = false;
 
@@ -24,18 +61,20 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
      * The optional value or values associated with the 'is' query key.
      *
      * @var string|array<int, string>|null
+     * 
+     * @lock-value
      */
     protected string|array|null $is = null;
 
     /**
      * Creates the query and initializes its configuration and supplied values.
      *
-     * @param array $queryArray Initial query data. The 'is' key initializes the
-     *                          additional value; include/exclude keys are handled
-     *                          by the parent class.
-     * @param int   $type       Casting mode used by the inherited include/exclude
-     *                          lists, such as INTEGER or STRING.
+     * @param array $queryArray Initial query data. The 'is' key initializes the additional value; include/exclude keys
+     *                          are handled by the parent class.
+     * @param int   $type       Casting mode used by the inherited include/exclude lists, such as INTEGER or STRING.
      * @param bool  $multiValue Whether the 'is' value must be an array of strings.
+     * 
+     * @lock-signature
      */
     public function __construct(
         array $queryArray = [],
@@ -46,7 +85,7 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
 
         parent::__construct($queryArray, $type);
 
-        if (\\array_key_exists('is', $queryArray)) {
+        if (\array_key_exists('is', $queryArray)) {
             $this->is($queryArray['is']);
         }
     }
@@ -54,19 +93,20 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
     /**
      * Creates a new instance using query data and optional configuration arguments.
      *
-     * Supported arguments are 'type' for the inherited value-casting mode and
-     * 'multiValue' to configure whether the 'is' value accepts multiple strings.
+     * Supported arguments are 'type' for the inherited value-casting mode and 'multiValue' to configure whether the
+     * 'is' value accepts multiple strings.
      *
      * @param array $queryArray Initial query data.
      * @param array $args       Optional configuration; supports 'type' and 'multiValue'.
-     *
      * @return static A new instance of the called class.
+     * 
+     * @lock-signature
      */
     public static function make(array $queryArray = [], array $args = []): static
     {
         return new static(
             $queryArray,
-            $args['type'] ?? self::INTEGER,
+            $args['type'] ?? false,
             $args['multiValue'] ?? false
         );
     }
@@ -74,26 +114,21 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
     /**
      * Sets the additional 'is' value.
      *
-     * In single-value mode, only a string is accepted. In multi-value mode,
-     * only an array containing strings is accepted. Empty strings are discarded;
-     * multi-value input is also deduplicated and reindexed. If no values remain,
+     * In single-value mode, only a string is accepted. In multi-value mode, only an array containing strings is 
+     * accepted. Empty strings are discarded; multi-value input is also deduplicated and reindexed. If no values remain,
      * the stored value becomes null and is omitted from the serialized query.
      *
-     * @param string|array<int, string> $value A string or a list of strings,
-     *                                         according to the configured mode.
+     * @param string|array<int, string> $value A string or a list of strings, according to the configured mode.
+     * @return static                          The current query instance for method chaining.
      *
-     * @return self The current query instance for method chaining.
-     *
-     * @throws \\InvalidArgumentException If the value does not match the configured
+     * @throws InvalidArgumentException If the value does not match the configured
      *                                     mode or contains a non-string item.
      */
     public function is(string|array $value): self
     {
         if (false === $this->multiValue) {
-            if (!\\is_string($value)) {
-                throw new \\InvalidArgumentException(
-                    'Is value must be a string in single-value mode.'
-                );
+            if (!\is_string($value)) {
+                throw new InvalidArgumentException('Is value must be a string in single-value mode.');
             }
 
             $this->is = '' === $value ? null : $value;
@@ -101,19 +136,20 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
             return $this;
         }
 
-        if (!\\is_array($value)) {
-            throw new \\InvalidArgumentException(
-                'Is value must be an array in multi-value mode.'
-            );
+        if (!\is_array($value)) {
+            throw new InvalidArgumentException('Is value must be an array in multi-value mode.');
         }
 
-        $value = \\array_values(
-            \\array_unique(
-                \\array_filter(
+        /**
+         * @TODO move process to ArrayUtil
+         */
+        $value = \array_values(
+            \array_unique(
+                \array_filter(
                     $value,
                     static function ($item): bool {
-                        if (!\\is_string($item)) {
-                            throw new \\InvalidArgumentException(
+                        if (!\is_string($item)) {
+                            throw new InvalidArgumentException(
                                 'Every is value must be a string.'
                             );
                         }
@@ -136,7 +172,9 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
      * Includes the inherited include/exclude data and adds the 'is' key only
      * when a non-empty value has been set.
      *
-     * @return array<string, mixed>
+     * @return array<string, array<int, int|float|string>|int|string>
+     * 
+     * @lock-signature
      */
     public function toArray(): array
     {
