@@ -7,6 +7,11 @@ namespace EPM\WordPress;
 use EPM\Utils\ArrayUtil;
 use EPM\Utils\NumberUtil;
 
+/*
+ * Copyright (c) Sina Kuhestani (EphpicMan).
+ * SPDX-License-Identifier: MIT
+ */
+
 \defined('ABSPATH') || exit;
 
 class IncludeQueryArg implements QueryArg
