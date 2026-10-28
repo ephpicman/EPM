@@ -42,29 +42,35 @@ use EPM\Utils\ArrayUtil;
 use EPM\Utils\NumberUtil;
 
 /**
- * Builds an inclusion list as part of EPM's internal query structure.
+ * Builds an argument array containing an inclusion list for a WordPress query.
  *
- * Values are normalized as non-negative integers or strings, depending on whether identifier mode is enabled.
- * Duplicate values are removed while preserving their order. The configured include key is used for both reading
- * the initial query data and generating the output array.
+ * Semantically, the list represents values connected by OR: a query matches when its target field matches any one
+ * of the listed values. This is intended for WordPress query arguments such as 'role__in', 'post__in', and similar
+ * *_in parameters.
+ *
+ * The output is an argument array to be passed to the relevant WordPress query API; this class does not execute
+ * the query. Values are normalized as non-negative integers when identifier mode is enabled, or as strings
+ * otherwise. Duplicate values are removed while preserving their original order. The configured include key is
+ * used to read the initial input and as the key in the resulting argument array.
  */
 class IncludeQueryArg implements QueryArg
 {
     /**
      * Indicates whether values are normalized as non-negative integers or strings.
+     *
      * @var bool
      */
     protected bool $isIdentifier = true;
 
     /**
-     * The key used to read and write inclusion values.
+     * The argument-array key used to read and write the inclusion list, such as 'role__in' or 'post__in'.
      *
      * @var string
      */
     protected string $includeKey;
 
     /**
-     * The normalized, unique values to include in the query.
+     * The normalized, unique values in the inclusion list.
      *
      * @var array<int, int|string>
      * @lock-type
@@ -73,11 +79,14 @@ class IncludeQueryArg implements QueryArg
     protected array $included = [];
 
     /**
-     * Creates an include query argument builder.
+     * Creates an inclusion-list argument builder.
      *
-     * @param array  $queryArray   Initial query data.
-     * @param bool   $isIdentifier true to normalize values as non-negative integers, otherwise as strings.
-     * @param string $includeKey   Key used to read and write inclusion values; defaults to 'included'.
+     * The resulting array is intended to be passed as arguments to a WordPress query API. Values in the list have
+     * OR semantics: matching any listed value is sufficient.
+     *
+     * @param array  $queryArray   Initial query arguments; the configured key is read when present.
+     * @param bool   $isIdentifier true to normalize values as non-negative integers, false to normalize as strings.
+     * @param string $includeKey   Argument key for the list, for example 'role__in'; defaults to 'included'.
      */
     public function __construct(
         array $queryArray = [],
@@ -93,12 +102,12 @@ class IncludeQueryArg implements QueryArg
     }
 
     /**
-     * Creates an instance from query data and optional configuration.
-     * The `$args['isIdentifier']` value determines whether values are normalized as non-negative integers or strings;
-     * it defaults to `true`. The `$args['includeKey']` value sets the key used for reading and writing values;
-     * it defaults to `'included'`.
+     * Creates an instance from initial query arguments and optional configuration.
      *
-     * @param array $queryArray Initial query data.
+     * The `$args['isIdentifier']` option controls value normalization and defaults to `true`.
+     * The `$args['includeKey']` option selects the argument-array key and defaults to `'included'`.
+     *
+     * @param array $queryArray Initial query arguments.
      * @param array $args       Optional configuration, including 'isIdentifier' and 'includeKey'.
      * @return static           A new instance of the called class.
      *
@@ -114,9 +123,7 @@ class IncludeQueryArg implements QueryArg
     }
 
     /**
-     * Cast a value according to the configured mode.
-     *
-     * Identifier mode normalizes the value as a non-negative integer; otherwise, the value is converted to a string.
+     * Normalizes a value according to the configured mode.
      *
      * @param int|float|string $value Value to normalize.
      * @return int|string             The normalized value.
@@ -129,10 +136,10 @@ class IncludeQueryArg implements QueryArg
     }
 
     /**
-     * Add one or more values to the include list.
+     * Adds one or more values to the inclusion list.
      *
-     * Each value is normalized according to the configured mode. Duplicate values are removed, while existing values
-     * retain their order.
+     * The values are normalized according to the configured mode. Duplicates are removed, and the order of existing
+     * values is preserved. Semantically, the values are alternatives (OR), not conditions that must all match.
      *
      * @param int|float|string|array $value A single value or a list of values.
      * @return static                       The current instance for method chaining.
@@ -149,7 +156,9 @@ class IncludeQueryArg implements QueryArg
     }
 
     /**
-     * Returns the normalized inclusion list using the configured key.
+     * Returns the query argument array containing the inclusion list under the configured key.
+     *
+     * Returns an empty array when no values have been added.
      *
      * @return array<string, mixed>
      *
@@ -167,7 +176,7 @@ class IncludeQueryArg implements QueryArg
     }
 
     /**
-     * Merge normalized values into the current include list, removing duplicates.
+     * Merges normalized values into the inclusion list, removing duplicates.
      *
      * @param array $values Values that have already been normalized.
      * @return void
