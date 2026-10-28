@@ -60,6 +60,10 @@ class UserQueryArg implements QueryArg
             [
                 'included' => $queryArray['include'] ?? [],
                 'excluded' => $queryArray['exclude'] ?? [],
+            ],
+            [
+                'includeKey' => 'included',
+                'excludeKey' => 'excluded',
             ]
         );
 
@@ -76,6 +80,8 @@ class UserQueryArg implements QueryArg
             [
                 'isIdentifier' => false,
                 'multiValue' => true,
+                'includeKey' => 'included',
+                'excludeKey' => 'excluded',
             ]
         );
 
@@ -93,6 +99,8 @@ class UserQueryArg implements QueryArg
             ],
             [
                 'isIdentifier' => false,
+                'includeKey' => 'included',
+                'excludeKey' => 'excluded',
             ]
         );
 
@@ -104,6 +112,8 @@ class UserQueryArg implements QueryArg
             ],
             [
                 'isIdentifier' => false,
+                'includeKey' => 'included',
+                'excludeKey' => 'excluded',
             ]
         );
 
