@@ -1,0 +1,43 @@
+name: EPM Unit Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out EPM-TESTS
+        uses: actions/checkout@v4
+        with:
+          repository: ephpicman/EPM-TESTS
+          ref: main
+          path: EPM-TESTS
+
+      - name: Check out the EPM revision being tested
+        uses: actions/checkout@v4
+        with:
+          repository: ephpicman/EPM
+          ref: ${{ github.sha }}
+          path: EPM-TESTS/EPM
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - name: Download PHPUnit PHAR
+        working-directory: EPM-TESTS
+        run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-11.phar --output phpunit.phar
+
+      - name: Run unit tests
+        working-directory: EPM-TESTS
+        run: php phpunit.phar
