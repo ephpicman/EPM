@@ -45,8 +45,8 @@ use EPM\Utils\NumberUtil;
  *
  * Builds an include list for WordPress query arguments.
  *
- * Values are normalized as non-negative integers or strings, depending on whether identifier mode is enabled. Duplicate
- * values are removed while preserving their order.
+ * Values are normalized as non-negative integers or strings, depending on whether identifier mode is enabled.
+ * Duplicate values are removed while preserving their order.
  */
 class IncludeQuery implements Query
 {
@@ -57,9 +57,9 @@ class IncludeQuery implements Query
     protected bool $isIdentifier = true;
 
     /**
-     * The normalized, unique values to include in the query
+     * The normalized, unique values to include in the query.
+     *
      * @var array<int, int|string>
-     * 
      * @lock-type
      * @lock-value
      */
@@ -99,7 +99,7 @@ class IncludeQuery implements Query
     }
 
     /**
-     * Cast a value according to the configured normalization type.
+     * Cast a value according to the configured mode.
      *
      * Identifier mode normalizes the value as a non-negative integer; otherwise, the value is converted to a string.
      *
@@ -116,7 +116,7 @@ class IncludeQuery implements Query
     /**
      * Add one or more values to the include list.
      *
-     * Each value is normalized according to the configured type. Duplicate values are removed, while existing values
+     * Each value is normalized according to the configured mode. Duplicate values are removed, while existing values
      * retain their order.
      *
      * @param int|float|string|array $value A single value or a list of values.
@@ -134,12 +134,9 @@ class IncludeQuery implements Query
     }
 
     /**
-     * Convert the include query to its array representation.
+     * Maps the normalized values to the 'included' argument expected by the target WordPress API.
      *
-     * Returns an empty array when no values have been added; otherwise returns the 'included' key with the normalized
-     * values.
-     *
-     * @return array<string, array<int, int|string>>
+     * @return array<string, mixed>
      *
      * @lock-signature
      */
