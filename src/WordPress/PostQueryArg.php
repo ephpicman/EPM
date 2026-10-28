@@ -55,15 +55,15 @@ class PostQueryArg implements QueryArg
         $this->postIdQuery = IncludeExcludeQueryArg::make([
             'include' => $queryArray['post__in'] ?? [],
             'exclude' => $queryArray['post__not_in'] ?? [],
-        ]);
+        ], ['includeKey' => 'post__in', 'excludeKey' => 'post__not_in']);
         $this->authorQuery = IncludeExcludeQueryArg::make([
             'include' => $queryArray['author__in'] ?? [],
             'exclude' => $queryArray['author__not_in'] ?? [],
-        ]);
+        ], ['includeKey' => 'author__in', 'excludeKey' => 'author__not_in']);
         $this->parentQuery = IncludeExcludeQueryArg::make([
             'include' => $queryArray['post_parent__in'] ?? [],
             'exclude' => $queryArray['post_parent__not_in'] ?? [],
-        ]);
+        ], ['includeKey' => 'post_parent__in', 'excludeKey' => 'post_parent__not_in']);
         $this->postTypeQuery = IncludeExcludeIsQueryArg::make([
             'include' => $queryArray['post_type__in'] ?? [],
             'is' => $queryArray['post_type'] ?? null,
