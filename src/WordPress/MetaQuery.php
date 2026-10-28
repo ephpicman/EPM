@@ -45,6 +45,8 @@ namespace EPM\WordPress;
  * chainable. This class does not validate every clause against WordPress or execute the resulting query.
  *
  * @see https://developer.wordpress.org/reference/classes/wp_meta_query/
+ *
+ * @lock
  */
 class MetaQuery implements Query
 {
