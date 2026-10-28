@@ -72,7 +72,7 @@ class PostQueryArg implements QueryArg
             'include' => $queryArray['post_status__in'] ?? [],
             'exclude' => $queryArray['post_status__not_in'] ?? [],
             'is' => isset($queryArray['post_status']) ? (array) $queryArray['post_status'] : null,
-        ], ['isIdentifier' => false, 'multiValue' => true, 'includeKey' => 'post_status__in', 'excludeKey' => 'post_status__not_in', 'isKey' => 'post_status']);
+        ], ['isIdentifier' => false, 'multiValue' => true, 'isKey' => 'post_status']);
         $this->searchQuery = SearchQueryArg::make([
             'search' => $queryArray['s'] ?? '',
         ], ['allowedSearchColumns' => ['post_title', 'post_content', 'post_excerpt']]);
