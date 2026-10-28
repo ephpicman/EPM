@@ -37,13 +37,13 @@ final class ArrayUtil
 
     public static function normalizeUniqueStrings(array $values): array
     {
-        return \\array_values(
-            \\array_unique(
-                \\array_filter(
+        return \array_values(
+            \array_unique(
+                \array_filter(
                     $values,
                     static function ($value): bool {
-                        if (!\\is_string($value)) {
-                            throw new \\InvalidArgumentException(
+                        if (!\is_string($value)) {
+                            throw new \InvalidArgumentException(
                                 'Every value must be a string.'
                             );
                         }
