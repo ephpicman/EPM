@@ -31,7 +31,7 @@ class NetworkQueryArg implements QueryArg
 
     public function __construct(array $queryArray = [])
     {
-        $this->networkIds = IncludeExcludeQueryArg::make(['include' => $queryArray['network__in'] ?? [], 'exclude' => $queryArray['network__not_in'] ?? []], ['includeKey' => 'network__in', 'excludeKey' => 'network__not_in']);
+        $this->networkIds = IncludeExcludeQueryArg::make(['network__in' => $queryArray['network__in'] ?? [], 'network__not_in' => $queryArray['network__not_in'] ?? []], ['includeKey' => 'network__in', 'excludeKey' => 'network__not_in']);
         if (array_key_exists('network_id', $queryArray)) $this->networkId = (int) $queryArray['network_id'];
         if (array_key_exists('domain', $queryArray)) $this->domain = (string) $queryArray['domain'];
         if (array_key_exists('path', $queryArray)) $this->path = (string) $queryArray['path'];
