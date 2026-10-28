@@ -65,7 +65,7 @@ class UserQuery
                         : null),
             ],
             [
-                'type' => IncludeQuery::STRING,
+                'isIdentifier' => false,
                 'multiValue' => true,
             ]
         );
@@ -83,7 +83,7 @@ class UserQuery
                 'is' => $queryArray['login'] ?? null,
             ],
             [
-                'type' => IncludeQuery::STRING,
+                'isIdentifier' => false,
             ]
         );
 
@@ -94,7 +94,7 @@ class UserQuery
                 'is' => $queryArray['nicename'] ?? null,
             ],
             [
-                'type' => IncludeQuery::STRING,
+                'isIdentifier' => false,
             ]
         );
 
