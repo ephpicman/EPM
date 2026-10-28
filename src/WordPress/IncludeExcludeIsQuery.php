@@ -41,24 +41,23 @@ namespace EPM\WordPress;
 use InvalidArgumentException;
 
 /**
- * Builds a query value with optional include/exclude lists and an additional string value or list of string values
- * under the 'is' key.
- *
- * The 'is' value can be configured for single-value or multi-value mode.
- * Include/exclude behavior is inherited from IncludeExcludeQuery.
+ * Builds an include/exclude query with an additional 'is' condition.
+
+ * The 'is' condition accepts either one string or a list of strings whose values are combined with OR semantics.
+ * The returned array uses EPM's internal query structure; a separate layer translates it to WordPress arguments.
  */
 
 class IncludeExcludeIsQuery extends IncludeExcludeQuery
 {
     /**
-     * Whether the 'is' value accepts a list of strings instead of one string.
-     * 
+     * Whether the 'is' condition accepts multiple values.
+     *
      * @var bool
      */
     protected bool $multiValue = false;
 
     /**
-     * The optional value or values associated with the 'is' query key.
+     * The optional value or values associated with the 'is' condition.
      *
      * @var string|array<int, string>|null
      * 
@@ -69,21 +68,20 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
     /**
      * Creates the query and initializes its configuration and supplied values.
      *
-     * @param array $queryArray Initial query data. The 'is' key initializes the additional value; include/exclude keys
-     *                          are handled by the parent class.
-     * @param int   $type       Casting mode used by the inherited include/exclude lists, such as INTEGER or STRING.
-     * @param bool  $multiValue Whether the 'is' value must be an array of strings.
+     * @param array $queryArray   Initial query data containing optional 'included', 'excluded', and 'is' keys.
+     * @param bool  $isIdentifier Whether inherited include/exclude values are normalized as non-negative integers.
+     * @param bool  $multiValue  Whether the 'is' condition accepts a list of strings instead of one string.
      * 
      * @lock-signature
      */
     public function __construct(
         array $queryArray = [],
-        int $type = self::INTEGER,
+        bool $isIdentifier = true,
         bool $multiValue = false
     ) {
         $this->multiValue = $multiValue;
 
-        parent::__construct($queryArray, $type);
+        parent::__construct($queryArray, $isIdentifier);
 
         if (\array_key_exists('is', $queryArray)) {
             $this->is($queryArray['is']);
@@ -93,11 +91,11 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
     /**
      * Creates a new instance using query data and optional configuration arguments.
      *
-     * Supported arguments are 'type' for the inherited value-casting mode and 'multiValue' to configure whether the
-     * 'is' value accepts multiple strings.
+     * Supported arguments are 'isIdentifier' for inherited include/exclude normalization and 'multiValue' for the
+     * cardinality of the 'is' condition.
      *
      * @param array $queryArray Initial query data.
-     * @param array $args       Optional configuration; supports 'type' and 'multiValue'.
+     * @param array $args       Optional configuration; supports 'isIdentifier' and 'multiValue'.
      * @return static A new instance of the called class.
      * 
      * @lock-signature
@@ -106,13 +104,13 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
     {
         return new static(
             $queryArray,
-            $args['type'] ?? false,
+            $args['isIdentifier'] ?? true,
             $args['multiValue'] ?? false
         );
     }
 
     /**
-     * Sets the additional 'is' value.
+     * Sets the additional 'is' condition.
      *
      * In single-value mode, only a string is accepted. In multi-value mode, only an array containing strings is 
      * accepted. Empty strings are discarded; multi-value input is also deduplicated and reindexed. If no values remain,
@@ -121,8 +119,7 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
      * @param string|array<int, string> $value A string or a list of strings, according to the configured mode.
      * @return static                          The current query instance for method chaining.
      *
-     * @throws InvalidArgumentException If the value does not match the configured
-     *                                     mode or contains a non-string item.
+     * @throws InvalidArgumentException If the value does not match the configured mode or contains a non-string item.
      */
     public function is(string|array $value): self
     {
@@ -167,12 +164,12 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
     }
 
     /**
-     * Returns the query state as an array.
+     * Returns the query state in EPM's internal array structure.
+
+     * Includes the inherited 'included' and 'excluded' keys and adds 'is' only when a non-empty value is set.
+     * This array is not translated to WordPress-specific argument names.
      *
-     * Includes the inherited include/exclude data and adds the 'is' key only
-     * when a non-empty value has been set.
-     *
-     * @return array<string, array<int, int|float|string>|int|string>
+     * @return array<string, mixed>
      * 
      * @lock-signature
      */
