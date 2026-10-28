@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
+use EPM\Utils\ArrayUtil;
 use InvalidArgumentException;
 
 /**
