@@ -47,7 +47,7 @@ namespace EPM\WordPress;
  *
  * @see https://developer.wordpress.org/reference/classes/wp_date_query/
  */
-class DateQuery implements Query
+class DateQuery implements QueryArg
 {
     /**
      * The current WordPress-compatible date-query structure.
@@ -78,7 +78,7 @@ class DateQuery implements Query
     /**
      * Create a builder from an optional date-query array.
      *
-     * The args parameter is accepted to satisfy the shared Query factory signature; this implementation does not use it.
+     * The args parameter is accepted to satisfy the shared QueryArg factory signature; this implementation does not use it.
      *
      * @param array<string|int, mixed> $queryArray Initial date-query structure.
      * @param array<string, mixed>     $args       Unused additional arguments.
