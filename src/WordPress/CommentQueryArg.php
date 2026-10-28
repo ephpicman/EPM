@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
+/*
+ * Copyright (c) Sina Kuhestani (EphpicMan).
+ * SPDX-License-Identifier: MIT
+ */
+
 \defined('ABSPATH') || exit;
 
-/**
- * Builds arguments for WordPress query APIs without executing a query.
- */
-
-/**
- * Builds arguments for WP_Comment_Query; it does not execute the query.
- *
- * @see WP_Comment_Query
- */
 class CommentQueryArg implements QueryArg
 {
     private IncludeExcludeQueryArg $commentIds;
@@ -47,25 +43,63 @@ class CommentQueryArg implements QueryArg
         $this->postIds = IncludeExcludeQueryArg::make(['post__in' => $queryArray['post__in'] ?? [], 'post__not_in' => $queryArray['post__not_in'] ?? []], ['includeKey' => 'post__in', 'excludeKey' => 'post__not_in']);
         $this->parentIds = IncludeExcludeQueryArg::make(['parent__in' => $queryArray['parent__in'] ?? [], 'parent__not_in' => $queryArray['parent__not_in'] ?? []], ['includeKey' => 'parent__in', 'excludeKey' => 'parent__not_in']);
         $this->userIds = IncludeExcludeQueryArg::make(['user__in' => $queryArray['user__in'] ?? [], 'user__not_in' => $queryArray['user__not_in'] ?? []], ['includeKey' => 'user__in', 'excludeKey' => 'user__not_in']);
-        if (array_key_exists('post_id', $queryArray)) $this->postId = (int) $queryArray['post_id'];
-        if (array_key_exists('parent', $queryArray)) $this->parent = (int) $queryArray['parent'];
-        if (array_key_exists('user_id', $queryArray)) $this->author = (int) $queryArray['user_id'];
-        if (array_key_exists('author_email', $queryArray)) $this->authorEmail = (string) $queryArray['author_email'];
-        if (array_key_exists('author_url', $queryArray)) $this->authorUrl = (string) $queryArray['author_url'];
-        if (array_key_exists('author_ip', $queryArray)) $this->authorIp = (string) $queryArray['author_ip'];
-        if (array_key_exists('search', $queryArray)) $this->search = (string) $queryArray['search'];
-        if (array_key_exists('type', $queryArray)) $this->type = (string) $queryArray['type'];
-        if (array_key_exists('status', $queryArray)) $this->status = (string) $queryArray['status'];
-        if (array_key_exists('number', $queryArray)) $this->number = (int) $queryArray['number'];
-        if (array_key_exists('offset', $queryArray)) $this->offset = (int) $queryArray['offset'];
-        if (array_key_exists('orderby', $queryArray)) $this->orderby = $queryArray['orderby'];
-        if (array_key_exists('order', $queryArray)) $this->order = (string) $queryArray['order'];
-        if (array_key_exists('fields', $queryArray)) $this->fields = (string) $queryArray['fields'];
-        if (array_key_exists('hierarchical', $queryArray)) $this->hierarchical = (bool) $queryArray['hierarchical'];
-        if (array_key_exists('count', $queryArray)) $this->count = (bool) $queryArray['count'];
-        if (array_key_exists('no_found_rows', $queryArray)) $this->noFoundRows = (bool) $queryArray['no_found_rows'];
-        if (array_key_exists('update_comment_meta_cache', $queryArray)) $this->updateCommentMetaCache = (bool) $queryArray['update_comment_meta_cache'];
-        if (array_key_exists('update_comment_post_cache', $queryArray)) $this->updateCommentPostCache = (bool) $queryArray['update_comment_post_cache'];
+        if (array_key_exists('post_id', $queryArray)) {
+            $this->postId = (int) $queryArray['post_id'];
+        }
+        if (array_key_exists('parent', $queryArray)) {
+            $this->parent = (int) $queryArray['parent'];
+        }
+        if (array_key_exists('user_id', $queryArray)) {
+            $this->author = (int) $queryArray['user_id'];
+        }
+        if (array_key_exists('author_email', $queryArray)) {
+            $this->authorEmail = (string) $queryArray['author_email'];
+        }
+        if (array_key_exists('author_url', $queryArray)) {
+            $this->authorUrl = (string) $queryArray['author_url'];
+        }
+        if (array_key_exists('author_ip', $queryArray)) {
+            $this->authorIp = (string) $queryArray['author_ip'];
+        }
+        if (array_key_exists('search', $queryArray)) {
+            $this->search = (string) $queryArray['search'];
+        }
+        if (array_key_exists('type', $queryArray)) {
+            $this->type = (string) $queryArray['type'];
+        }
+        if (array_key_exists('status', $queryArray)) {
+            $this->status = (string) $queryArray['status'];
+        }
+        if (array_key_exists('number', $queryArray)) {
+            $this->number = (int) $queryArray['number'];
+        }
+        if (array_key_exists('offset', $queryArray)) {
+            $this->offset = (int) $queryArray['offset'];
+        }
+        if (array_key_exists('orderby', $queryArray)) {
+            $this->orderby = $queryArray['orderby'];
+        }
+        if (array_key_exists('order', $queryArray)) {
+            $this->order = (string) $queryArray['order'];
+        }
+        if (array_key_exists('fields', $queryArray)) {
+            $this->fields = (string) $queryArray['fields'];
+        }
+        if (array_key_exists('hierarchical', $queryArray)) {
+            $this->hierarchical = (bool) $queryArray['hierarchical'];
+        }
+        if (array_key_exists('count', $queryArray)) {
+            $this->count = (bool) $queryArray['count'];
+        }
+        if (array_key_exists('no_found_rows', $queryArray)) {
+            $this->noFoundRows = (bool) $queryArray['no_found_rows'];
+        }
+        if (array_key_exists('update_comment_meta_cache', $queryArray)) {
+            $this->updateCommentMetaCache = (bool) $queryArray['update_comment_meta_cache'];
+        }
+        if (array_key_exists('update_comment_post_cache', $queryArray)) {
+            $this->updateCommentPostCache = (bool) $queryArray['update_comment_post_cache'];
+        }
     }
 
     public static function make(array $queryArray = [], array $args = []): static
@@ -73,13 +107,33 @@ class CommentQueryArg implements QueryArg
         return new static($queryArray);
     }
 
-public function includeComments(int|array $ids): self { $this->commentIds->include($ids); return $this; }
+public function includeComments(int|array $ids): self
+{
+    $this->commentIds->include($ids);
 
-public function excludeComments(int|array $ids): self { $this->commentIds->exclude($ids); return $this; }
+        return $this;
+}
 
-public function postId(int $id): self { $this->postId = $id; return $this; }
+public function excludeComments(int|array $ids): self
+{
+    $this->commentIds->exclude($ids);
 
-public function search(string $value): self { $this->search = $value; return $this; }
+        return $this;
+}
+
+public function postId(int $id): self
+{
+    $this->postId = $id;
+
+        return $this;
+}
+
+public function search(string $value): self
+{
+    $this->search = $value;
+
+        return $this;
+}
 
     public function toArray(): array
     {
@@ -110,7 +164,9 @@ public function search(string $value): self { $this->search = $value; return $th
             'update_comment_post_cache' => $this->updateCommentPostCache,
         ];
         foreach ($values as $key => $value) {
-            if (null !== $value) $args[$key] = $value;
+            if (null !== $value) {
+                $args[$key] = $value;
+            }
         }
 
         return $args;
