@@ -21,7 +21,6 @@ class CommentQueryArg implements QueryArg
     private IncludeExcludeQueryArg $postIds;
     private IncludeExcludeQueryArg $parentIds;
     private IncludeExcludeQueryArg $userIds;
-    private ?int $commentId = null;
     private ?int $postId = null;
     private ?int $parent = null;
     private ?int $author = null;
@@ -44,11 +43,10 @@ class CommentQueryArg implements QueryArg
 
     public function __construct(array $queryArray = [])
     {
-        $this->commentIds = IncludeExcludeQueryArg::make(['include' => $queryArray['comment__in'] ?? [], 'exclude' => $queryArray['comment__not_in'] ?? []], ['includeKey' => 'comment__in', 'excludeKey' => 'comment__not_in']);
-        $this->postIds = IncludeExcludeQueryArg::make(['include' => $queryArray['post__in'] ?? [], 'exclude' => $queryArray['post__not_in'] ?? []], ['includeKey' => 'post__in', 'excludeKey' => 'post__not_in']);
-        $this->parentIds = IncludeExcludeQueryArg::make(['include' => $queryArray['parent__in'] ?? [], 'exclude' => $queryArray['parent__not_in'] ?? []], ['includeKey' => 'parent__in', 'excludeKey' => 'parent__not_in']);
-        $this->userIds = IncludeExcludeQueryArg::make(['include' => $queryArray['user__in'] ?? [], 'exclude' => $queryArray['user__not_in'] ?? []], ['includeKey' => 'user__in', 'excludeKey' => 'user__not_in']);
-        if (array_key_exists('comment_ID', $queryArray)) $this->commentId = (int) $queryArray['comment_ID'];
+        $this->commentIds = IncludeExcludeQueryArg::make(['comment__in' => $queryArray['comment__in'] ?? [], 'comment__not_in' => $queryArray['comment__not_in'] ?? []], ['includeKey' => 'comment__in', 'excludeKey' => 'comment__not_in']);
+        $this->postIds = IncludeExcludeQueryArg::make(['post__in' => $queryArray['post__in'] ?? [], 'post__not_in' => $queryArray['post__not_in'] ?? []], ['includeKey' => 'post__in', 'excludeKey' => 'post__not_in']);
+        $this->parentIds = IncludeExcludeQueryArg::make(['parent__in' => $queryArray['parent__in'] ?? [], 'parent__not_in' => $queryArray['parent__not_in'] ?? []], ['includeKey' => 'parent__in', 'excludeKey' => 'parent__not_in']);
+        $this->userIds = IncludeExcludeQueryArg::make(['user__in' => $queryArray['user__in'] ?? [], 'user__not_in' => $queryArray['user__not_in'] ?? []], ['includeKey' => 'user__in', 'excludeKey' => 'user__not_in']);
         if (array_key_exists('post_id', $queryArray)) $this->postId = (int) $queryArray['post_id'];
         if (array_key_exists('parent', $queryArray)) $this->parent = (int) $queryArray['parent'];
         if (array_key_exists('user_id', $queryArray)) $this->author = (int) $queryArray['user_id'];
@@ -91,7 +89,6 @@ public function search(string $value): self { $this->search = $value; return $th
         $args += $this->parentIds->toArray();
         $args += $this->userIds->toArray();
         $values = [
-            'comment_ID' => $this->commentId,
             'post_id' => $this->postId,
             'parent' => $this->parent,
             'user_id' => $this->author,
