@@ -48,7 +48,7 @@ namespace EPM\WordPress;
  *
  * @lock
  */
-class MetaQuery implements Query
+class MetaQuery implements QueryArg
 {
 
 	/**
@@ -81,7 +81,7 @@ class MetaQuery implements Query
 	/**
 	 * Create a builder from an optional metadata-query array.
 	 *
-	 * The args param is accepted to satisfy the shared Query factory signature; this implementation does not use it.
+	 * The args param is accepted to satisfy the shared QueryArg factory signature; this implementation does not use it.
 	 *
 	 * @param array<string|int, mixed> $queryArray Initial metadata-query structure.
 	 * @param array<string, mixed> $args           Unused additional arguments.
