@@ -87,7 +87,7 @@ class IncludeExcludeQuery extends IncludeQuery
      */
     public function include(int|float|string|array $value): static
     {
-        $values = ArrayUtil::castValues($value, [$this, 'cast']);
+        $values = ArrayUtil::castValues($value, fn($item) => $this->cast($item));
 
         $this->mergeIncluded($values);
 
@@ -111,7 +111,7 @@ class IncludeExcludeQuery extends IncludeQuery
      */
     public function exclude(int|float|string|array $value): static
     {
-        $values = ArrayUtil::castValues($value, [$this, 'cast']);
+        $values = ArrayUtil::castValues($value, fn($item) => $this->cast($item));
 
         $this->excluded = ArrayUtil::mergeUnique($this->excluded, $values);
         $this->included = ArrayUtil::removeValues($this->included, $values);
