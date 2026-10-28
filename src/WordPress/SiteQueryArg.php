@@ -34,13 +34,13 @@ class SiteQueryArg implements QueryArg
     private ?bool $mature = null;
     private ?bool $spam = null;
     private ?bool $deleted = null;
-    private ?bool $langId = null;
+    private ?int $langId = null;
     private ?bool $updateSiteCache = null;
 
     public function __construct(array $queryArray = [])
     {
-        $this->siteIds = IncludeExcludeQueryArg::make(['include' => $queryArray['site__in'] ?? [], 'exclude' => $queryArray['site__not_in'] ?? []], ['includeKey' => 'site__in', 'excludeKey' => 'site__not_in']);
-        $this->networkIds = IncludeExcludeQueryArg::make(['include' => $queryArray['network__in'] ?? [], 'exclude' => $queryArray['network__not_in'] ?? []], ['includeKey' => 'network__in', 'excludeKey' => 'network__not_in']);
+        $this->siteIds = IncludeExcludeQueryArg::make(['site__in' => $queryArray['site__in'] ?? [], 'site__not_in' => $queryArray['site__not_in'] ?? []], ['includeKey' => 'site__in', 'excludeKey' => 'site__not_in']);
+        $this->networkIds = IncludeExcludeQueryArg::make(['network__in' => $queryArray['network__in'] ?? [], 'network__not_in' => $queryArray['network__not_in'] ?? []], ['includeKey' => 'network__in', 'excludeKey' => 'network__not_in']);
         if (array_key_exists('ID', $queryArray)) $this->siteId = (int) $queryArray['ID'];
         if (array_key_exists('network_id', $queryArray)) $this->networkId = (int) $queryArray['network_id'];
         if (array_key_exists('domain', $queryArray)) $this->domain = (string) $queryArray['domain'];
@@ -56,7 +56,7 @@ class SiteQueryArg implements QueryArg
         if (array_key_exists('mature', $queryArray)) $this->mature = (bool) $queryArray['mature'];
         if (array_key_exists('spam', $queryArray)) $this->spam = (bool) $queryArray['spam'];
         if (array_key_exists('deleted', $queryArray)) $this->deleted = (bool) $queryArray['deleted'];
-        if (array_key_exists('lang_id', $queryArray)) $this->langId = (bool) $queryArray['lang_id'];
+        if (array_key_exists('lang_id', $queryArray)) $this->langId = (int) $queryArray['lang_id'];
         if (array_key_exists('update_site_cache', $queryArray)) $this->updateSiteCache = (bool) $queryArray['update_site_cache'];
     }
 
