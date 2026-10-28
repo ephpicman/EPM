@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
+/*
+ * Copyright (c) Sina Kuhestani (EphpicMan).
+ * SPDX-License-Identifier: MIT
+ */
+
 \defined('ABSPATH') || exit;
 
-/**
- * Builds arguments for WordPress query APIs without executing a query.
- */
-
-/**
- * Builds arguments for WP_Site_Query; it does not execute the query.
- *
- * @see WP_Site_Query
- */
 class SiteQueryArg implements QueryArg
 {
     private IncludeExcludeQueryArg $siteIds;
@@ -41,23 +37,57 @@ class SiteQueryArg implements QueryArg
     {
         $this->siteIds = IncludeExcludeQueryArg::make(['site__in' => $queryArray['site__in'] ?? [], 'site__not_in' => $queryArray['site__not_in'] ?? []], ['includeKey' => 'site__in', 'excludeKey' => 'site__not_in']);
         $this->networkIds = IncludeExcludeQueryArg::make(['network__in' => $queryArray['network__in'] ?? [], 'network__not_in' => $queryArray['network__not_in'] ?? []], ['includeKey' => 'network__in', 'excludeKey' => 'network__not_in']);
-        if (array_key_exists('ID', $queryArray)) $this->siteId = (int) $queryArray['ID'];
-        if (array_key_exists('network_id', $queryArray)) $this->networkId = (int) $queryArray['network_id'];
-        if (array_key_exists('domain', $queryArray)) $this->domain = (string) $queryArray['domain'];
-        if (array_key_exists('path', $queryArray)) $this->path = (string) $queryArray['path'];
-        if (array_key_exists('search', $queryArray)) $this->search = (string) $queryArray['search'];
-        if (array_key_exists('number', $queryArray)) $this->number = (int) $queryArray['number'];
-        if (array_key_exists('offset', $queryArray)) $this->offset = (int) $queryArray['offset'];
-        if (array_key_exists('orderby', $queryArray)) $this->orderby = $queryArray['orderby'];
-        if (array_key_exists('order', $queryArray)) $this->order = (string) $queryArray['order'];
-        if (array_key_exists('fields', $queryArray)) $this->fields = (string) $queryArray['fields'];
-        if (array_key_exists('public', $queryArray)) $this->public = (bool) $queryArray['public'];
-        if (array_key_exists('archived', $queryArray)) $this->archived = (bool) $queryArray['archived'];
-        if (array_key_exists('mature', $queryArray)) $this->mature = (bool) $queryArray['mature'];
-        if (array_key_exists('spam', $queryArray)) $this->spam = (bool) $queryArray['spam'];
-        if (array_key_exists('deleted', $queryArray)) $this->deleted = (bool) $queryArray['deleted'];
-        if (array_key_exists('lang_id', $queryArray)) $this->langId = (int) $queryArray['lang_id'];
-        if (array_key_exists('update_site_cache', $queryArray)) $this->updateSiteCache = (bool) $queryArray['update_site_cache'];
+        if (array_key_exists('ID', $queryArray)) {
+            $this->siteId = (int) $queryArray['ID'];
+        }
+        if (array_key_exists('network_id', $queryArray)) {
+            $this->networkId = (int) $queryArray['network_id'];
+        }
+        if (array_key_exists('domain', $queryArray)) {
+            $this->domain = (string) $queryArray['domain'];
+        }
+        if (array_key_exists('path', $queryArray)) {
+            $this->path = (string) $queryArray['path'];
+        }
+        if (array_key_exists('search', $queryArray)) {
+            $this->search = (string) $queryArray['search'];
+        }
+        if (array_key_exists('number', $queryArray)) {
+            $this->number = (int) $queryArray['number'];
+        }
+        if (array_key_exists('offset', $queryArray)) {
+            $this->offset = (int) $queryArray['offset'];
+        }
+        if (array_key_exists('orderby', $queryArray)) {
+            $this->orderby = $queryArray['orderby'];
+        }
+        if (array_key_exists('order', $queryArray)) {
+            $this->order = (string) $queryArray['order'];
+        }
+        if (array_key_exists('fields', $queryArray)) {
+            $this->fields = (string) $queryArray['fields'];
+        }
+        if (array_key_exists('public', $queryArray)) {
+            $this->public = (bool) $queryArray['public'];
+        }
+        if (array_key_exists('archived', $queryArray)) {
+            $this->archived = (bool) $queryArray['archived'];
+        }
+        if (array_key_exists('mature', $queryArray)) {
+            $this->mature = (bool) $queryArray['mature'];
+        }
+        if (array_key_exists('spam', $queryArray)) {
+            $this->spam = (bool) $queryArray['spam'];
+        }
+        if (array_key_exists('deleted', $queryArray)) {
+            $this->deleted = (bool) $queryArray['deleted'];
+        }
+        if (array_key_exists('lang_id', $queryArray)) {
+            $this->langId = (int) $queryArray['lang_id'];
+        }
+        if (array_key_exists('update_site_cache', $queryArray)) {
+            $this->updateSiteCache = (bool) $queryArray['update_site_cache'];
+        }
     }
 
     public static function make(array $queryArray = [], array $args = []): static
@@ -65,13 +95,33 @@ class SiteQueryArg implements QueryArg
         return new static($queryArray);
     }
 
-public function includeSites(int|array $ids): self { $this->siteIds->include($ids); return $this; }
+public function includeSites(int|array $ids): self
+{
+    $this->siteIds->include($ids);
 
-public function excludeSites(int|array $ids): self { $this->siteIds->exclude($ids); return $this; }
+        return $this;
+}
 
-public function networkId(int $id): self { $this->networkId = $id; return $this; }
+public function excludeSites(int|array $ids): self
+{
+    $this->siteIds->exclude($ids);
 
-public function search(string $value): self { $this->search = $value; return $this; }
+        return $this;
+}
+
+public function networkId(int $id): self
+{
+    $this->networkId = $id;
+
+        return $this;
+}
+
+public function search(string $value): self
+{
+    $this->search = $value;
+
+        return $this;
+}
 
     public function toArray(): array
     {
@@ -98,7 +148,9 @@ public function search(string $value): self { $this->search = $value; return $th
             'update_site_cache' => $this->updateSiteCache,
         ];
         foreach ($values as $key => $value) {
-            if (null !== $value) $args[$key] = $value;
+            if (null !== $value) {
+                $args[$key] = $value;
+            }
         }
 
         return $args;
