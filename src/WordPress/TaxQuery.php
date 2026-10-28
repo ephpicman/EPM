@@ -434,13 +434,13 @@ class TaxQuery implements Query
             return $this;
         }
 
+        $relation = 'OR' === strtoupper($relation) ? 'OR' : 'AND';
+
         if (isset($query['relation'])) {
-            $query['relation'] = 'OR' === strtoupper($relation)
-                ? 'OR'
-                : 'AND';
-        } elseif ('OR' === strtoupper($relation)) {
+            $query['relation'] = $relation;
+        } else {
             $query = [
-                'relation' => 'OR',
+                'relation' => $relation,
                 $query,
             ];
         }
