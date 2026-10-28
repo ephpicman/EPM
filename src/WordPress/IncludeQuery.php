@@ -83,8 +83,9 @@ class IncludeQuery implements Query
     }
 
     /**
-     * Create an instance from query data and optional configuration.
-     * The normalization type may be provided in `$args['type']`; it defaults to `INTEGER`.
+     * Creates an instance from query data and optional configuration.
+     * The `$args['isIdentifier']` value determines whether values are normalized as non-negative integers or strings;
+     * it defaults to `true`.
      *
      * @param array $queryArray Initial query data.
      * @param array $args       Optional configuration, including 'isIdentifier'.
