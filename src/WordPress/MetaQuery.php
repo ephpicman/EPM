@@ -41,7 +41,7 @@ namespace EPM\WordPress;
 /**
  * Fluent builder for the meta_query argument used by WordPress query APIs.
  *
- * Conditions are stored as a WordPress-compatible metadata-query array and returned by toArray(). Methods are 
+ * Conditions are stored as a WordPress-compatible metadata-query array and returned by toArray(). Methods are
  * chainable. This class does not validate every clause against WordPress or execute the resulting query.
  *
  * @see https://developer.wordpress.org/reference/classes/wp_meta_query/
@@ -366,7 +366,7 @@ class MetaQuery implements Query
 	 * @param string $relation   Relation inside the group: AND or OR.
 	 * @return $this             The current builder instance.
 	 *
-	 * @lock-signatrure
+	 * @lock-signature
 	 */
 	public function whereGroup(callable $callback, string $relation = 'AND'): self
 	{
@@ -473,23 +473,6 @@ class MetaQuery implements Query
 			return $this;
 		}
 
-		if (isset($this->query['relation']) && 'OR' === $this->query['relation']) {
-			$last_key = array_key_last($this->query);
-			$last = $this->query[$last_key];
-
-			if (isset($last['relation']) && 'AND' === $last['relation']) {
-				$this->query[$last_key][] = $clause;
-			} else {
-				$this->query[$last_key] = [
-					'relation' => 'AND',
-					$last,
-					$clause,
-				];
-			}
-
-			return $this;
-		}
-
 		if (isset($this->query['relation']) && 'AND' === $this->query['relation']) {
 			$this->query[] = $clause;
 		} else {
@@ -547,7 +530,7 @@ class MetaQuery implements Query
 	 * Returns the internal structure directly, without copying, normalising, or validating it. The result can be
 	 * assigned to a WordPress query's meta_query argument.
 	 *
-     * @return array<string, array<int, int|float|string>|int|string>
+     * @return array<string|int, mixed>
 	 *
 	 * @lock
 	 */
