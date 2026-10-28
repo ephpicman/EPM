@@ -378,7 +378,7 @@ class MetaQueryArg implements QueryArg
 	/**
 	 * Add a nested group joined to the current expression with OR.
 	 *
-	 * The callback receives a fresh MetaQuery builder. The relation argument controls how conditions inside the group
+	 * The callback receives a fresh MetaQueryArg builder. The relation argument controls how conditions inside the group
 	 * are combined; values other than OR default to AND.
 	 *
 	 * @param callable $callback Receives the nested builder.
@@ -534,7 +534,6 @@ class MetaQueryArg implements QueryArg
 	 *
      * @return array<string|int, mixed>
 	 *
-	 * @lock
 	 */
 	public function toArray(): array
 	{
