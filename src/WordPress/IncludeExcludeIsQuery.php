@@ -42,7 +42,7 @@ use InvalidArgumentException;
 
 /**
  * Builds an include/exclude query with an additional 'is' condition.
-
+ *
  * The 'is' condition accepts either one string or a list of strings whose values are combined with OR semantics.
  * The returned array uses EPM's internal query structure; a separate layer translates it to WordPress arguments.
  */
@@ -60,7 +60,7 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
      * The optional value or values associated with the 'is' condition.
      *
      * @var string|array<int, string>|null
-     * 
+     *
      * @lock-value
      */
     protected string|array|null $is = null;
@@ -70,8 +70,8 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
      *
      * @param array $queryArray   Initial query data containing optional 'included', 'excluded', and 'is' keys.
      * @param bool  $isIdentifier Whether inherited include/exclude values are normalized as non-negative integers.
-     * @param bool  $multiValue  Whether the 'is' condition accepts a list of strings instead of one string.
-     * 
+     * @param bool  $multiValue   Whether the 'is' condition accepts a list of strings instead of one string.
+     *
      * @lock-signature
      */
     public function __construct(
@@ -97,7 +97,7 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
      * @param array $queryArray Initial query data.
      * @param array $args       Optional configuration; supports 'isIdentifier' and 'multiValue'.
      * @return static A new instance of the called class.
-     * 
+     *
      * @lock-signature
      */
     public static function make(array $queryArray = [], array $args = []): static
@@ -112,12 +112,11 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
     /**
      * Sets the additional 'is' condition.
      *
-     * In single-value mode, only a string is accepted. In multi-value mode, only an array containing strings is 
-     * accepted. Empty strings are discarded; multi-value input is also deduplicated and reindexed. If no values remain,
-     * the stored value becomes null and is omitted from the serialized query.
+     * In single-value mode, a non-empty string is stored. In multi-value mode, empty strings are discarded and
+     * duplicate strings are removed while preserving order. An empty result clears the condition.
      *
      * @param string|array<int, string> $value A string or a list of strings, according to the configured mode.
-     * @return static                          The current query instance for method chaining.
+     * @return self                            The current query instance for method chaining.
      *
      * @throws InvalidArgumentException If the value does not match the configured mode or contains a non-string item.
      */
