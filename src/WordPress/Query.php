@@ -39,10 +39,10 @@ declare(strict_types=1);
 namespace EPM\WordPress;
 
 /**
- * Base contract for query objects that represent WordPress query arguments.
+ * Base contract for query objects that represent EPM query data.
  *
- * Concrete classes define how query data is created and how it is converted into the array format expected by the
- * relevant WordPress API.
+ * Concrete classes define how query data is created and expose their state as an EPM-structured array. Translation
+ * of that internal structure into arguments for a specific WordPress API belongs to a separate layer.
  *
  * @lock
  */
@@ -58,8 +58,8 @@ interface Query
     public static function make(array $queryArray = [], array $args = []): static;
 
     /**
-     * The concrete implementation is responsible for mapping its properties to the argument names and structure
-     * expected by the target WordPress API.
+     * Returns the query object's data in EPM's internal array structure. The result is not required to use the
+     * argument names or structure expected by any particular WordPress API.
      *
      * @return array<string, mixed>
      */
