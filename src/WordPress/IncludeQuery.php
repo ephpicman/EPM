@@ -48,7 +48,7 @@ use EPM\Utils\NumberUtil;
  * Duplicate values are removed while preserving their order. The internal 'included' key is translated by a separate
  * layer when preparing arguments for a specific WordPress API.
  */
-class IncludeQuery implements Query
+class IncludeQuery implements QueryArg
 {
     /**
      * Indicates whether values are normalized as non-negative integers or strings.
