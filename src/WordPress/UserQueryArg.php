@@ -805,26 +805,7 @@ class UserQueryArg implements QueryArg
         }
 
         if (null !== $this->fields) {
-            if ('all' === $this->fields) {
-                $args['fields'] = 'all';
-            } elseif (\is_array($this->fields)) {
-                $userFields = \array_values(
-                    \array_filter(
-                        $this->fields,
-                        static fn ($field): bool =>
-                            \is_string($field)
-                            && \in_array($field, self::USER_COLUMNS, true)
-                    )
-                );
-
-                $args['fields'] = [] !== $userFields ? $userFields : 'ID';
-            } else {
-                $args['fields'] = \in_array(
-                    $this->fields,
-                    self::USER_COLUMNS,
-                    true
-                ) ? $this->fields : 'ID';
-            }
+            $args['fields'] = $this->fields;
         }
 
         if (null !== $this->countTotal) {
