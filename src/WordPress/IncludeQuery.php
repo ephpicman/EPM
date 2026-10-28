@@ -127,7 +127,7 @@ class IncludeQuery implements Query
     public function include(int|float|string|array $value): static
     {
         $this->mergeIncluded(
-            ArrayUtil::castValues($value, [$this, 'cast'])
+            ArrayUtil::castValues($value, fn($item) => $this->cast($item))
         );
 
         return $this;
