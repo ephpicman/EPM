@@ -24,8 +24,6 @@ jobs:
       - name: Check out the EPM revision being tested
         uses: actions/checkout@v4
         with:
-          repository: ephpicman/EPM
-          ref: ${{ github.sha }}
           path: EPM-TESTS/EPM
 
       - name: Set up PHP
