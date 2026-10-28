@@ -90,6 +90,14 @@ class SearchQuery implements Query
      */
     public function __construct(array $allowedSearchColumns, array $queryArray = [])
     {
+        foreach ($allowedSearchColumns as $column) {
+            if (!\is_string($column)) {
+                throw new \InvalidArgumentException(
+                    'Every allowed search column must be a string.'
+                );
+            }
+        }
+
         $this->allowedSearchColumns = \array_values(
             \array_unique($allowedSearchColumns, SORT_STRING)
         );
@@ -165,11 +173,17 @@ class SearchQuery implements Query
                             throw new \InvalidArgumentException('Every search column must be a string.');
                         }
 
-                        if (!\in_array($item, $this->allowedSearchColumns, true)) {
-                            throw new \InvalidArgumentException('Invalid search column: ' . $item);
+                        if ('' === $item) {
+                            return false;
                         }
 
-                        return '' !== $item;
+                        if (!\in_array($item, $this->allowedSearchColumns, true)) {
+                            throw new \InvalidArgumentException(
+                                'Invalid search column: ' . $item
+                            );
+                        }
+
+                        return true;
                     }
                 ),
                 SORT_STRING
