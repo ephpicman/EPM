@@ -136,26 +136,7 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
             throw new InvalidArgumentException('Is value must be an array in multi-value mode.');
         }
 
-        /**
-         * @TODO move process to ArrayUtil
-         */
-        $value = \array_values(
-            \array_unique(
-                \array_filter(
-                    $value,
-                    static function ($item): bool {
-                        if (!\is_string($item)) {
-                            throw new InvalidArgumentException(
-                                'Every is value must be a string.'
-                            );
-                        }
-
-                        return '' !== $item;
-                    }
-                ),
-                SORT_STRING
-            )
-        );
+        $value = ArrayUtil::normalizeUniqueStrings($value);
 
         $this->is = [] === $value ? null : $value;
 
