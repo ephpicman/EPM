@@ -292,7 +292,7 @@ class UserQuery
 
     public function limit(int $number): self
     {
-        $this->number = $number;
+        $this->number = -1 === $number ? -1 : \\max(0, $number);
 
         return $this;
     }
@@ -592,7 +592,26 @@ class UserQuery
         }
 
         if (null !== $this->fields) {
-            $args['fields'] = $this->fields;
+            if ('all' === $this->fields) {
+                $args['fields'] = 'all';
+            } elseif (\\is_array($this->fields)) {
+                $userFields = \\array_values(
+                    \\array_filter(
+                        $this->fields,
+                        static fn ($field): bool =>
+                            \\is_string($field)
+                            && \\in_array($field, self::USER_COLUMNS, true)
+                    )
+                );
+
+                $args['fields'] = [] !== $userFields ? $userFields : 'ID';
+            } else {
+                $args['fields'] = \\in_array(
+                    $this->fields,
+                    self::USER_COLUMNS,
+                    true
+                ) ? $this->fields : 'ID';
+            }
         }
 
         if (null !== $this->countTotal) {
