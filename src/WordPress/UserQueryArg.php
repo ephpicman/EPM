@@ -34,8 +34,6 @@ class UserQueryArg implements QueryArg
 
     private IncludeExcludeIsQueryArg $roleQuery;
 
-    private IncludeExcludeIsQueryArg $roleAndQuery;
-
     private IncludeExcludeIsQueryArg $capabilityQuery;
 
     private IncludeExcludeIsQueryArg $loginQuery;
@@ -108,19 +106,6 @@ class UserQueryArg implements QueryArg
                 'multiValue' => true,
                 'includeKey' => 'included',
                 'excludeKey' => 'excluded',
-            ]
-        );
-
-        $this->roleAndQuery = IncludeExcludeIsQueryArg::make(
-            [
-                'is' => isset($queryArray['role__and'])
-                    ? (array) $queryArray['role__and']
-                    : null,
-            ],
-            [
-                'isIdentifier' => false,
-                'multiValue' => true,
-                'isKey' => 'is',
             ]
         );
 
@@ -301,13 +286,6 @@ class UserQueryArg implements QueryArg
     public function rolesNotIn(string|array $roles): self
     {
         $this->roleQuery->exclude($roles);
-
-        return $this;
-    }
-
-    public function rolesAnd(string|array $roles): self
-    {
-        $this->roleAndQuery->is(\is_array($roles) ? $roles : [$roles]);
 
         return $this;
     }
@@ -728,12 +706,6 @@ class UserQueryArg implements QueryArg
 
         if (isset($roleQuery['is'])) {
             $args['role'] = $roleQuery['is'];
-        }
-
-        $roleAndQuery = $this->roleAndQuery->toArray();
-
-        if (isset($roleAndQuery['is'])) {
-            $args['role__and'] = $roleAndQuery['is'];
         }
 
         $capabilityQuery = $this->capabilityQuery->toArray();
