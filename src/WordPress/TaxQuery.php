@@ -47,7 +47,7 @@ namespace EPM\WordPress;
  *
  * @see https://developer.wordpress.org/reference/classes/wp_tax_query/
  */
-class TaxQuery implements Query
+class TaxQuery implements QueryArg
 {
     /**
      * The current WordPress-compatible taxonomy-query structure.
@@ -78,7 +78,7 @@ class TaxQuery implements Query
     /**
      * Create a builder from an optional taxonomy-query array.
      *
-     * The args parameter is accepted to satisfy the shared Query factory signature; this implementation does not use it.
+     * The args parameter is accepted to satisfy the shared QueryArg factory signature; this implementation does not use it.
      *
      * @param array<string|int, mixed> $queryArray Initial taxonomy-query structure.
      * @param array<string, mixed>     $args       Unused additional arguments.
