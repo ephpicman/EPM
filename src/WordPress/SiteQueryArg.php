@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
-/*
- * Copyright (c) Sina Kuhestani (EphpicMan).
- * SPDX-License-Identifier: MIT
- */
-
 \defined('ABSPATH') || exit;
 
 class SiteQueryArg implements QueryArg
@@ -95,33 +90,33 @@ class SiteQueryArg implements QueryArg
         return new static($queryArray);
     }
 
-public function includeSites(int|array $ids): self
-{
-    $this->siteIds->include($ids);
+    public function includeSites(int|array $ids): self
+    {
+        $this->siteIds->include($ids);
 
         return $this;
-}
+    }
 
-public function excludeSites(int|array $ids): self
-{
-    $this->siteIds->exclude($ids);
-
-        return $this;
-}
-
-public function networkId(int $id): self
-{
-    $this->networkId = $id;
+    public function excludeSites(int|array $ids): self
+    {
+        $this->siteIds->exclude($ids);
 
         return $this;
-}
+    }
 
-public function search(string $value): self
-{
-    $this->search = $value;
+    public function networkId(int $id): self
+    {
+        $this->networkId = $id;
 
         return $this;
-}
+    }
+
+    public function search(string $value): self
+    {
+        $this->search = $value;
+
+        return $this;
+    }
 
     public function toArray(): array
     {
