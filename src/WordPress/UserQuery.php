@@ -120,7 +120,9 @@ class UserQuery
         }
 
         if (isset($queryArray['order'])) {
-            $this->order = $queryArray['order'];
+            $this->order = 'DESC' === \\strtoupper($queryArray['order'])
+                ? 'DESC'
+                : 'ASC';
         }
 
         if (isset($queryArray['number'])) {
@@ -129,7 +131,7 @@ class UserQuery
         }
 
         if (isset($queryArray['offset'])) {
-            $this->offset = (int) $queryArray['offset'];
+            $this->offset = \\max(0, (int) $queryArray['offset']);
         }
 
         if (\array_key_exists('fields', $queryArray)) {
