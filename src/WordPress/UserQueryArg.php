@@ -34,6 +34,10 @@ class UserQueryArg implements QueryArg
 
     private IncludeExcludeIsQueryArg $roleQuery;
 
+    private IncludeExcludeIsQueryArg $roleAndQuery;
+
+    private IncludeExcludeIsQueryArg $capabilityQuery;
+
     private IncludeExcludeIsQueryArg $loginQuery;
 
     private IncludeExcludeIsQueryArg $nicenameQuery;
@@ -54,6 +58,28 @@ class UserQueryArg implements QueryArg
 
     private ?bool $countTotal = null;
 
+    private ?int $blogId = null;
+
+    private ?string $metaKey = null;
+
+    private mixed $metaValue = null;
+
+    private ?string $metaCompare = null;
+
+    private ?string $metaType = null;
+
+    private ?string $metaCompareKey = null;
+
+    private ?string $metaTypeKey = null;
+
+    private ?int $paged = null;
+
+    private ?string $who = null;
+
+    private bool|array|null $hasPublishedPosts = null;
+
+    private ?bool $cacheResults = null;
+
     public function __construct(array $queryArray = [])
     {
         $this->idQuery = IncludeExcludeQueryArg::make(
@@ -73,9 +99,7 @@ class UserQueryArg implements QueryArg
                 'excluded' => $queryArray['role__not_in'] ?? [],
                 'is' => isset($queryArray['role'])
                     ? (array) $queryArray['role']
-                    : (isset($queryArray['role__and'])
-                        ? (array) $queryArray['role__and']
-                        : null),
+                    : null,
             ],
             [
                 'isIdentifier' => false,
@@ -85,11 +109,34 @@ class UserQueryArg implements QueryArg
             ]
         );
 
-        if (isset($queryArray['role'])) {
-            $this->roleQuery->is(
-                (array) $queryArray['role']
-            );
-        }
+        $this->roleAndQuery = IncludeExcludeIsQueryArg::make(
+            [
+                'is' => isset($queryArray['role__and'])
+                    ? (array) $queryArray['role__and']
+                    : null,
+            ],
+            [
+                'isIdentifier' => false,
+                'multiValue' => true,
+                'isKey' => 'is',
+            ]
+        );
+
+        $this->capabilityQuery = IncludeExcludeIsQueryArg::make(
+            [
+                'included' => $queryArray['capability__in'] ?? [],
+                'excluded' => $queryArray['capability__not_in'] ?? [],
+                'is' => isset($queryArray['capability'])
+                    ? (array) $queryArray['capability']
+                    : null,
+            ],
+            [
+                'isIdentifier' => false,
+                'multiValue' => true,
+                'includeKey' => 'included',
+                'excludeKey' => 'excluded',
+            ]
+        );
 
         $this->loginQuery = IncludeExcludeIsQueryArg::make(
             [
@@ -164,6 +211,53 @@ class UserQueryArg implements QueryArg
         if (isset($queryArray['count_total'])) {
             $this->countTotal = (bool) $queryArray['count_total'];
         }
+
+        if (isset($queryArray['blog_id'])) {
+            $this->blogId = (int) $queryArray['blog_id'];
+        }
+
+        if (isset($queryArray['meta_key'])) {
+            $this->metaKey = (string) $queryArray['meta_key'];
+        }
+
+        if (\\array_key_exists('meta_value', $queryArray)) {
+            $this->metaValue = $queryArray['meta_value'];
+        }
+
+        if (isset($queryArray['meta_compare'])) {
+            $this->metaCompare = (string) $queryArray['meta_compare'];
+        }
+
+        if (isset($queryArray['meta_type'])) {
+            $this->metaType = (string) $queryArray['meta_type'];
+        }
+
+        if (isset($queryArray['meta_compare_key'])) {
+            $this->metaCompareKey = (string) $queryArray['meta_compare_key'];
+        }
+
+        if (isset($queryArray['meta_type_key'])) {
+            $this->metaTypeKey = (string) $queryArray['meta_type_key'];
+        }
+
+        if (isset($queryArray['paged'])) {
+            $this->paged = \\max(1, (int) $queryArray['paged']);
+        }
+
+        if (isset($queryArray['who'])) {
+            $this->who = (string) $queryArray['who'];
+        }
+
+        if (\\array_key_exists('has_published_posts', $queryArray)) {
+            $value = $queryArray['has_published_posts'];
+            $this->hasPublishedPosts = \\is_bool($value) || null === $value
+                ? $value
+                : (array) $value;
+        }
+
+        if (isset($queryArray['cache_results'])) {
+            $this->cacheResults = (bool) $queryArray['cache_results'];
+        }
     }
 
     public static function make(array $queryArray = [], array $args = []): static
@@ -213,6 +307,111 @@ class UserQueryArg implements QueryArg
         $this->roleQuery->is(
             \is_array($roles) ? $roles : [$roles]
         );
+
+        return $this;
+    }
+
+    public function rolesAnd(string|array $roles): self
+    {
+        $this->roleAndQuery->is(\\is_array($roles) ? $roles : [$roles]);
+
+        return $this;
+    }
+
+    public function capability(string|array $capabilities): self
+    {
+        $this->capabilityQuery->is(\\is_array($capabilities) ? $capabilities : [$capabilities]);
+
+        return $this;
+    }
+
+    public function capabilitiesIn(string|array $capabilities): self
+    {
+        $this->capabilityQuery->include($capabilities);
+
+        return $this;
+    }
+
+    public function capabilitiesNotIn(string|array $capabilities): self
+    {
+        $this->capabilityQuery->exclude($capabilities);
+
+        return $this;
+    }
+
+    public function blogId(int $blogId): self
+    {
+        $this->blogId = $blogId;
+
+        return $this;
+    }
+
+    public function metaKey(string $key): self
+    {
+        $this->metaKey = $key;
+
+        return $this;
+    }
+
+    public function metaValue(mixed $value): self
+    {
+        $this->metaValue = $value;
+
+        return $this;
+    }
+
+    public function metaCompare(string $comparison): self
+    {
+        $this->metaCompare = $comparison;
+
+        return $this;
+    }
+
+    public function metaType(string $type): self
+    {
+        $this->metaType = $type;
+
+        return $this;
+    }
+
+    public function metaCompareKey(string $comparison): self
+    {
+        $this->metaCompareKey = $comparison;
+
+        return $this;
+    }
+
+    public function metaTypeKey(string $type): self
+    {
+        $this->metaTypeKey = $type;
+
+        return $this;
+    }
+
+    public function paged(int $page): self
+    {
+        $this->paged = \\max(1, $page);
+
+        return $this;
+    }
+
+    public function who(string $who): self
+    {
+        $this->who = $who;
+
+        return $this;
+    }
+
+    public function hasPublishedPosts(bool|array|null $postTypes): self
+    {
+        $this->hasPublishedPosts = $postTypes;
+
+        return $this;
+    }
+
+    public function cacheResults(bool $cache = true): self
+    {
+        $this->cacheResults = $cache;
 
         return $this;
     }
@@ -536,6 +735,26 @@ class UserQueryArg implements QueryArg
             $args['role'] = $roleQuery['is'];
         }
 
+        $roleAndQuery = $this->roleAndQuery->toArray();
+
+        if (isset($roleAndQuery['is'])) {
+            $args['role__and'] = $roleAndQuery['is'];
+        }
+
+        $capabilityQuery = $this->capabilityQuery->toArray();
+
+        if (isset($capabilityQuery['included'])) {
+            $args['capability__in'] = $capabilityQuery['included'];
+        }
+
+        if (isset($capabilityQuery['excluded'])) {
+            $args['capability__not_in'] = $capabilityQuery['excluded'];
+        }
+
+        if (isset($capabilityQuery['is'])) {
+            $args['capability'] = $capabilityQuery['is'];
+        }
+
         $loginQuery = $this->loginQuery->toArray();
 
         if (isset($loginQuery['included'])) {
@@ -615,6 +834,50 @@ class UserQueryArg implements QueryArg
 
         if (null !== $this->countTotal) {
             $args['count_total'] = $this->countTotal;
+        }
+
+        if (null !== $this->blogId) {
+            $args['blog_id'] = $this->blogId;
+        }
+
+        if (null !== $this->metaKey) {
+            $args['meta_key'] = $this->metaKey;
+        }
+
+        if (null !== $this->metaValue) {
+            $args['meta_value'] = $this->metaValue;
+        }
+
+        if (null !== $this->metaCompare) {
+            $args['meta_compare'] = $this->metaCompare;
+        }
+
+        if (null !== $this->metaType) {
+            $args['meta_type'] = $this->metaType;
+        }
+
+        if (null !== $this->metaCompareKey) {
+            $args['meta_compare_key'] = $this->metaCompareKey;
+        }
+
+        if (null !== $this->metaTypeKey) {
+            $args['meta_type_key'] = $this->metaTypeKey;
+        }
+
+        if (null !== $this->paged) {
+            $args['paged'] = $this->paged;
+        }
+
+        if (null !== $this->who) {
+            $args['who'] = $this->who;
+        }
+
+        if (null !== $this->hasPublishedPosts) {
+            $args['has_published_posts'] = $this->hasPublishedPosts;
+        }
+
+        if (null !== $this->cacheResults) {
+            $args['cache_results'] = $this->cacheResults;
         }
 
         $metaQuery = $this->metaQuery->toArray();
