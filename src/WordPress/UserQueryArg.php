@@ -64,6 +64,8 @@ class UserQueryArg implements QueryArg
 
     private mixed $metaValue = null;
 
+    private bool $hasMetaValue = false;
+
     private ?string $metaCompare = null;
 
     private ?string $metaType = null;
@@ -220,8 +222,9 @@ class UserQueryArg implements QueryArg
             $this->metaKey = (string) $queryArray['meta_key'];
         }
 
-        if (\\array_key_exists('meta_value', $queryArray)) {
+        if (\array_key_exists('meta_value', $queryArray)) {
             $this->metaValue = $queryArray['meta_value'];
+            $this->hasMetaValue = true;
         }
 
         if (isset($queryArray['meta_compare'])) {
@@ -241,16 +244,16 @@ class UserQueryArg implements QueryArg
         }
 
         if (isset($queryArray['paged'])) {
-            $this->paged = \\max(1, (int) $queryArray['paged']);
+            $this->paged = \max(1, (int) $queryArray['paged']);
         }
 
         if (isset($queryArray['who'])) {
             $this->who = (string) $queryArray['who'];
         }
 
-        if (\\array_key_exists('has_published_posts', $queryArray)) {
+        if (\array_key_exists('has_published_posts', $queryArray)) {
             $value = $queryArray['has_published_posts'];
-            $this->hasPublishedPosts = \\is_bool($value) || null === $value
+            $this->hasPublishedPosts = \is_bool($value) || null === $value
                 ? $value
                 : (array) $value;
         }
@@ -304,23 +307,14 @@ class UserQueryArg implements QueryArg
 
     public function rolesAnd(string|array $roles): self
     {
-        $this->roleQuery->is(
-            \is_array($roles) ? $roles : [$roles]
-        );
-
-        return $this;
-    }
-
-    public function rolesAnd(string|array $roles): self
-    {
-        $this->roleAndQuery->is(\\is_array($roles) ? $roles : [$roles]);
+        $this->roleAndQuery->is(\is_array($roles) ? $roles : [$roles]);
 
         return $this;
     }
 
     public function capability(string|array $capabilities): self
     {
-        $this->capabilityQuery->is(\\is_array($capabilities) ? $capabilities : [$capabilities]);
+        $this->capabilityQuery->is(\is_array($capabilities) ? $capabilities : [$capabilities]);
 
         return $this;
     }
@@ -356,6 +350,7 @@ class UserQueryArg implements QueryArg
     public function metaValue(mixed $value): self
     {
         $this->metaValue = $value;
+        $this->hasMetaValue = true;
 
         return $this;
     }
@@ -390,7 +385,7 @@ class UserQueryArg implements QueryArg
 
     public function paged(int $page): self
     {
-        $this->paged = \\max(1, $page);
+        $this->paged = \max(1, $page);
 
         return $this;
     }
@@ -844,7 +839,7 @@ class UserQueryArg implements QueryArg
             $args['meta_key'] = $this->metaKey;
         }
 
-        if (null !== $this->metaValue) {
+        if ($this->hasMetaValue) {
             $args['meta_value'] = $this->metaValue;
         }
 
