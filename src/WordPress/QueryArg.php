@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace EPM\\WordPress;
+namespace EPM\WordPress;
 
 /**
  * Contract for objects whose purpose is to build the primary argument array for a WordPress query API.
