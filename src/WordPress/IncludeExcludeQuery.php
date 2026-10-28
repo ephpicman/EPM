@@ -41,17 +41,16 @@ namespace EPM\WordPress;
 use EPM\Utils\ArrayUtil;
 
 /**
- * Builds a query value containing mutually exclusive included and excluded values.
+ * Builds include and exclude lists for WordPress query arguments.
  *
- * Extends IncludeQuery with an exclusion list. Adding a value to one list removes the same value from the other list.
+ * Extends IncludeQuery with an exclusion list. Values added to one list are removed from the other list.
  */
 class IncludeExcludeQuery extends IncludeQuery
 {
     /**
-     * Values that must be excluded from the query.
+     * The values to exclude from the query.
      *
      * @var array<int, int|float|string>
-     * 
      * @lock-type
      * @lock-value
      */
@@ -60,10 +59,10 @@ class IncludeExcludeQuery extends IncludeQuery
     /**
      * Creates the query and optionally initializes its included and excluded values.
      *
-     * @param array $queryArray   Initial query data. The 'excluded' key initializes the exclusion list; other supported
-     *                            data is handled by the parent constructor.
-     * @param bool  $isIdentifier Indicates if current query is subject to an identifier.
-     * 
+     * @param array $queryArray   Initial query data; 'included' is handled by the parent constructor and 'excluded'
+     *                            initializes the exclusion list.
+     * @param bool  $isIdentifier Whether values are normalized as non-negative integers or strings.
+     *
      * @lock-signature
      */
     public function __construct(array $queryArray = [], bool $isIdentifier = true)
@@ -78,11 +77,11 @@ class IncludeExcludeQuery extends IncludeQuery
     /**
      * Adds values to the inclusion list.
      *
-     * Values are cast using the correct type, deduplicated by the parent helper, and removed from the exclusion list.
+     * Values are normalized according to the configured mode, deduplicated, and removed from the exclusion list.
      *
      * @param int|float|string|array $value One value or a list of values to include.
      * @return static                       The current query instance for method chaining.
-     * 
+     *
      * @lock-signature
      */
     public function include(int|float|string|array $value): static
@@ -102,11 +101,11 @@ class IncludeExcludeQuery extends IncludeQuery
     /**
      * Adds values to the exclusion list.
      *
-     * Values are cast using the configured type, deduplicated, and removed from the inclusion list.
+     * Values are normalized according to the configured mode, deduplicated, and removed from the inclusion list.
      *
      * @param int|float|string|array $value One value or a list of values to exclude.
      * @return static                       The current query instance for method chaining.
-     * 
+     *
      * @lock-signature
      */
     public function exclude(int|float|string|array $value): static
@@ -120,13 +119,10 @@ class IncludeExcludeQuery extends IncludeQuery
     }
 
     /**
-     * Returns the query state as an array.
+     * Maps the included and excluded values to the argument names expected by the target WordPress API.
      *
-     * The parent output contains the included values. The 'excluded' key is added only when the exclusion list is not
-     * empty.
+     * @return array<string, mixed>
      *
-     * @return array<string, array<int, int|float|string>|int|string>
-     * 
      * @lock-signature
      */
     public function toArray(): array
