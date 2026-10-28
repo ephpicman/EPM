@@ -61,7 +61,7 @@ interface Query
      * The concrete implementation is responsible for mapping its properties to the argument names and structure
      * expected by the target WordPress API.
      *
-     * @return array<string, array<int, int|float|string>|int|string>
+     * @return array<string, mixed>
      */
     public function toArray(): array;
 }
