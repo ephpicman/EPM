@@ -18,8 +18,8 @@ jobs:
           EPM_COMMIT_SHA: ${{ github.sha }}
         run: |
           if [ -z "$EPM_TESTS_TOKEN" ]; then
-            echo "::error::Add EPM_TESTS_TOKEN to EPM repository secrets. It needs Contents read/write access to ephpicman/EPM-TESTS."
-            exit 1
+            echo "::warning::Add EPM_TESTS_TOKEN to EPM repository secrets to enable immediate test runs."
+            exit 0
           fi
 
           curl --fail --silent --show-error \
