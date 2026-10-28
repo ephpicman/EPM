@@ -33,7 +33,7 @@ class UserQuery
 
     private MetaQuery $metaQuery;
 
-    private ?string $orderBy = null;
+    private string|array|null $orderBy = null;
 
     private ?string $order = null;
 
@@ -58,7 +58,7 @@ class UserQuery
             [
                 'included' => $queryArray['role__in'] ?? [],
                 'excluded' => $queryArray['role__not_in'] ?? [],
-                'is' => $queryArray['role__and'] ?? null,
+                'is' => $queryArray['role'] ?? $queryArray['role__and'] ?? null,
             ],
             [
                 'type' => IncludeQuery::STRING,
@@ -124,7 +124,8 @@ class UserQuery
         }
 
         if (isset($queryArray['number'])) {
-            $this->number = (int) $queryArray['number'];
+            $number = (int) $queryArray['number'];
+            $this->number = -1 === $number ? -1 : \\max(0, $number);
         }
 
         if (isset($queryArray['offset'])) {
@@ -277,7 +278,7 @@ class UserQuery
             ->searchColumns('display_name');
     }
 
-    public function orderBy(string $field, string $direction = 'ASC'): self
+    public function orderBy(string|array $field, string $direction = 'ASC'): self
     {
         $this->orderBy = $field;
         $this->order = 'DESC' === \strtoupper($direction)
@@ -531,7 +532,7 @@ class UserQuery
         }
 
         if (isset($roleQuery['is'])) {
-            $args['role__and'] = $roleQuery['is'];
+            $args['role'] = $roleQuery['is'];
         }
 
         $loginQuery = $this->loginQuery->toArray();
@@ -609,7 +610,7 @@ class UserQuery
     {
         $args = $this->toArray();
 
-        if (null !== $this->fields) {
+        if ([] !== $this->getSelectedMetaFields()) {
             $args['fields'] = 'all';
         }
 
