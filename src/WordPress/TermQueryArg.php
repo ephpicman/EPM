@@ -21,7 +21,7 @@ class TermQueryArg implements QueryArg
     private IncludeExcludeQueryArg $parentIds;
     private ?int $termId = null;
     private ?int $parent = null;
-    private ?string $taxonomy = null;
+    private string|array|null $taxonomy = null;
     private ?string $name = null;
     private ?string $slug = null;
     private ?string $search = null;
@@ -42,10 +42,10 @@ class TermQueryArg implements QueryArg
     public function __construct(array $queryArray = [])
     {
         $this->termIds = IncludeExcludeQueryArg::make(['include' => $queryArray['include'] ?? [], 'exclude' => $queryArray['exclude'] ?? []], ['includeKey' => 'include', 'excludeKey' => 'exclude']);
-        $this->parentIds = IncludeExcludeQueryArg::make(['include' => $queryArray['parent__in'] ?? [], 'exclude' => $queryArray['parent__not_in'] ?? []], ['includeKey' => 'parent__in', 'excludeKey' => 'parent__not_in']);
+        $this->parentIds = IncludeExcludeQueryArg::make(['parent__in' => $queryArray['parent__in'] ?? [], 'parent__not_in' => $queryArray['parent__not_in'] ?? []], ['includeKey' => 'parent__in', 'excludeKey' => 'parent__not_in']);
         if (array_key_exists('term_id', $queryArray)) $this->termId = (int) $queryArray['term_id'];
         if (array_key_exists('parent', $queryArray)) $this->parent = (int) $queryArray['parent'];
-        if (array_key_exists('taxonomy', $queryArray)) $this->taxonomy = (string) $queryArray['taxonomy'];
+        if (array_key_exists('taxonomy', $queryArray)) $this->taxonomy = is_array($queryArray['taxonomy']) ? array_values(array_map('strval', $queryArray['taxonomy'])) : (string) $queryArray['taxonomy'];
         if (array_key_exists('name', $queryArray)) $this->name = (string) $queryArray['name'];
         if (array_key_exists('slug', $queryArray)) $this->slug = (string) $queryArray['slug'];
         if (array_key_exists('search', $queryArray)) $this->search = (string) $queryArray['search'];
@@ -73,7 +73,7 @@ public function includeTerms(int|array $ids): self { $this->termIds->include($id
 
 public function excludeTerms(int|array $ids): self { $this->termIds->exclude($ids); return $this; }
 
-public function taxonomy(string|array $taxonomy): self { $this->taxonomy = is_array($taxonomy) ? $taxonomy[0] : $taxonomy; return $this; }
+public function taxonomy(string|array $taxonomy): self { $this->taxonomy = $taxonomy; return $this; }
 
 public function search(string $value): self { $this->search = $value; return $this; }
 
