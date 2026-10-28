@@ -44,11 +44,9 @@ class PostQueryArg implements QueryArg
     private ?bool $lazyLoadTermMeta = null;
     private ?string $perm = null;
     private ?int $commentCount = null;
-    private ?string $commentCountCompare = null;
     private ?bool $exact = null;
     private ?bool $sentence = null;
     private ?string $fields = null;
-    private ?bool $embed = null;
 
     public function __construct(array $queryArray = [])
     {
@@ -65,12 +63,9 @@ class PostQueryArg implements QueryArg
             'exclude' => $queryArray['post_parent__not_in'] ?? [],
         ], ['includeKey' => 'post_parent__in', 'excludeKey' => 'post_parent__not_in']);
         $this->postTypeQuery = IncludeExcludeIsQueryArg::make([
-            'include' => $queryArray['post_type__in'] ?? [],
             'is' => $queryArray['post_type'] ?? null,
         ], ['isIdentifier' => false, 'multiValue' => true, 'includeKey' => 'post_type__in', 'isKey' => 'post_type']);
         $this->postStatusQuery = IncludeExcludeIsQueryArg::make([
-            'include' => $queryArray['post_status__in'] ?? [],
-            'exclude' => $queryArray['post_status__not_in'] ?? [],
             'is' => isset($queryArray['post_status']) ? (array) $queryArray['post_status'] : null,
         ], ['isIdentifier' => false, 'multiValue' => true, 'isKey' => 'post_status']);
         $this->searchQuery = SearchQueryArg::make([
@@ -99,11 +94,9 @@ class PostQueryArg implements QueryArg
         if (isset($queryArray['lazy_load_term_meta'])) $this->lazyLoadTermMeta = (bool) $queryArray['lazy_load_term_meta'];
         if (isset($queryArray['perm'])) $this->perm = (string) $queryArray['perm'];
         if (isset($queryArray['comment_count'])) $this->commentCount = (int) $queryArray['comment_count'];
-        if (isset($queryArray['comment_count_compare'])) $this->commentCountCompare = (string) $queryArray['comment_count_compare'];
         if (isset($queryArray['exact'])) $this->exact = (bool) $queryArray['exact'];
         if (isset($queryArray['sentence'])) $this->sentence = (bool) $queryArray['sentence'];
         if (isset($queryArray['fields'])) $this->fields = (string) $queryArray['fields'];
-        if (isset($queryArray['embed'])) $this->embed = (bool) $queryArray['embed'];
     }
 
     public static function make(array $queryArray = [], array $args = []): static
@@ -171,11 +164,9 @@ class PostQueryArg implements QueryArg
             'lazy_load_term_meta' => $this->lazyLoadTermMeta,
             'perm' => $this->perm,
             'comment_count' => $this->commentCount,
-            'comment_count_compare' => $this->commentCountCompare,
             'exact' => $this->exact,
             'sentence' => $this->sentence,
             'fields' => $this->fields,
-            'embed' => $this->embed,
         ];
         foreach ($values as $key => $value) {
             if (null !== $value) $args[$key] = $value;
