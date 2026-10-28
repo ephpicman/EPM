@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace EPM\\WordPress;
+namespace EPM\WordPress;
 
-\\defined('ABSPATH') || exit;
+\defined('ABSPATH') || exit;
 
 /**
  * Builds arguments for WordPress's WP_Query without executing the query.
