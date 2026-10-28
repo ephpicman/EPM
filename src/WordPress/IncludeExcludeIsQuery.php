@@ -84,7 +84,7 @@ class IncludeExcludeIsQuery extends IncludeExcludeQuery
 
         parent::__construct($queryArray, $isIdentifier);
 
-        if (\array_key_exists('is', $queryArray)) {
+        if (isset($queryArray['is'])) {
             $this->is($queryArray['is']);
         }
     }
