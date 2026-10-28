@@ -58,7 +58,11 @@ class UserQuery
             [
                 'included' => $queryArray['role__in'] ?? [],
                 'excluded' => $queryArray['role__not_in'] ?? [],
-                'is' => $queryArray['role'] ?? $queryArray['role__and'] ?? null,
+                'is' => isset($queryArray['role'])
+                    ? (array) $queryArray['role']
+                    : (isset($queryArray['role__and'])
+                        ? (array) $queryArray['role__and']
+                        : null),
             ],
             [
                 'type' => IncludeQuery::STRING,
@@ -120,18 +124,18 @@ class UserQuery
         }
 
         if (isset($queryArray['order'])) {
-            $this->order = 'DESC' === \\strtoupper($queryArray['order'])
+            $this->order = 'DESC' === \strtoupper($queryArray['order'])
                 ? 'DESC'
                 : 'ASC';
         }
 
         if (isset($queryArray['number'])) {
             $number = (int) $queryArray['number'];
-            $this->number = -1 === $number ? -1 : \\max(0, $number);
+            $this->number = -1 === $number ? -1 : \max(0, $number);
         }
 
         if (isset($queryArray['offset'])) {
-            $this->offset = \\max(0, (int) $queryArray['offset']);
+            $this->offset = \max(0, (int) $queryArray['offset']);
         }
 
         if (\array_key_exists('fields', $queryArray)) {
@@ -292,7 +296,7 @@ class UserQuery
 
     public function limit(int $number): self
     {
-        $this->number = -1 === $number ? -1 : \\max(0, $number);
+        $this->number = -1 === $number ? -1 : \max(0, $number);
 
         return $this;
     }
@@ -594,19 +598,19 @@ class UserQuery
         if (null !== $this->fields) {
             if ('all' === $this->fields) {
                 $args['fields'] = 'all';
-            } elseif (\\is_array($this->fields)) {
-                $userFields = \\array_values(
-                    \\array_filter(
+            } elseif (\is_array($this->fields)) {
+                $userFields = \array_values(
+                    \array_filter(
                         $this->fields,
                         static fn ($field): bool =>
-                            \\is_string($field)
-                            && \\in_array($field, self::USER_COLUMNS, true)
+                            \is_string($field)
+                            && \in_array($field, self::USER_COLUMNS, true)
                     )
                 );
 
                 $args['fields'] = [] !== $userFields ? $userFields : 'ID';
             } else {
-                $args['fields'] = \\in_array(
+                $args['fields'] = \in_array(
                     $this->fields,
                     self::USER_COLUMNS,
                     true
