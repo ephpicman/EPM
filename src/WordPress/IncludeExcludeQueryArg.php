@@ -36,9 +36,9 @@
 
 declare(strict_types=1);
 
-namespace EPM\\WordPress;
+namespace EPM\WordPress;
 
-use EPM\\Utils\\ArrayUtil;
+use EPM\Utils\ArrayUtil;
 
 /**
  * Builds inclusion and exclusion lists for a WordPress query argument array.
