@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
-/*
- * Copyright (c) Sina Kuhestani (EphpicMan).
- * SPDX-License-Identifier: MIT
- */
-
 \defined('ABSPATH') || exit;
 
 class TermQueryArg implements QueryArg
@@ -103,33 +98,33 @@ class TermQueryArg implements QueryArg
         return new static($queryArray);
     }
 
-public function includeTerms(int|array $ids): self
-{
-    $this->termIds->include($ids);
+    public function includeTerms(int|array $ids): self
+    {
+        $this->termIds->include($ids);
 
         return $this;
-}
+    }
 
-public function excludeTerms(int|array $ids): self
-{
-    $this->termIds->exclude($ids);
-
-        return $this;
-}
-
-public function taxonomy(string|array $taxonomy): self
-{
-    $this->taxonomy = $taxonomy;
+    public function excludeTerms(int|array $ids): self
+    {
+        $this->termIds->exclude($ids);
 
         return $this;
-}
+    }
 
-public function search(string $value): self
-{
-    $this->search = $value;
+    public function taxonomy(string|array $taxonomy): self
+    {
+        $this->taxonomy = $taxonomy;
 
         return $this;
-}
+    }
+
+    public function search(string $value): self
+    {
+        $this->search = $value;
+
+        return $this;
+    }
 
     public function toArray(): array
     {
