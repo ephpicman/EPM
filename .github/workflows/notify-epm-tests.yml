@@ -16,10 +16,10 @@ jobs:
     steps:
       - name: Dispatch coverage update
         env:
-          GH_TOKEN: ${{ secrets.EPM_TESTS_DISPATCH_TOKEN }}
+          GH_TOKEN: ${{ secrets.EPM_TESTS_TOKEN }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "::error::Repository secret EPM_TESTS_DISPATCH_TOKEN is not configured."
+            echo "::error::Repository secret EPM_TESTS_TOKEN is not configured."
             exit 1
           fi
 
