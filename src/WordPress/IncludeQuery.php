@@ -42,11 +42,11 @@ use EPM\Utils\ArrayUtil;
 use EPM\Utils\NumberUtil;
 
 /**
- *
- * Builds an include list for WordPress query arguments.
+ * Builds an inclusion list as part of EPM's internal query structure.
  *
  * Values are normalized as non-negative integers or strings, depending on whether identifier mode is enabled.
- * Duplicate values are removed while preserving their order.
+ * Duplicate values are removed while preserving their order. The internal 'included' key is translated by a separate
+ * layer when preparing arguments for a specific WordPress API.
  */
 class IncludeQuery implements Query
 {
@@ -134,7 +134,7 @@ class IncludeQuery implements Query
     }
 
     /**
-     * Maps the normalized values to the 'included' argument expected by the target WordPress API.
+     * Returns the normalized inclusion list in EPM's internal query structure.
      *
      * @return array<string, mixed>
      *
