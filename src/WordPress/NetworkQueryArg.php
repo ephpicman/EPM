@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
-/*
- * Copyright (c) Sina Kuhestani (EphpicMan).
- * SPDX-License-Identifier: MIT
- */
-
 \defined('ABSPATH') || exit;
 
 class NetworkQueryArg implements QueryArg
@@ -65,26 +60,26 @@ class NetworkQueryArg implements QueryArg
         return new static($queryArray);
     }
 
-public function includeNetworks(int|array $ids): self
-{
-    $this->networkIds->include($ids);
+    public function includeNetworks(int|array $ids): self
+    {
+        $this->networkIds->include($ids);
 
         return $this;
-}
+    }
 
-public function excludeNetworks(int|array $ids): self
-{
-    $this->networkIds->exclude($ids);
-
-        return $this;
-}
-
-public function networkId(int $id): self
-{
-    $this->networkId = $id;
+    public function excludeNetworks(int|array $ids): self
+    {
+        $this->networkIds->exclude($ids);
 
         return $this;
-}
+    }
+
+    public function networkId(int $id): self
+    {
+        $this->networkId = $id;
+
+        return $this;
+    }
 
     public function toArray(): array
     {
