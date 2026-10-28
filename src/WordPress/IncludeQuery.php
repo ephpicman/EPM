@@ -45,13 +45,13 @@ use EPM\Utils\NumberUtil;
  *
  * Builds an include list for WordPress query arguments.
  *
- * Values can be normalized as absolute integers or strings, depending on the configured type. Duplicate values are
- * removed while preserving their order.
+ * Values are normalized as non-negative integers or strings, depending on whether identifier mode is enabled. Duplicate
+ * values are removed while preserving their order.
  */
 class IncludeQuery implements Query
 {
     /**
-     * Indicates if current query is subject to an **ID (positive integer)** list.
+     * Indicates whether values are normalized as non-negative integers or strings.
      * @var bool
      */
     protected bool $isIdentifier = true;
@@ -69,7 +69,7 @@ class IncludeQuery implements Query
      * Creates an include query.
      *
      * @param array $queryArray   Initial query data; the 'included' key is read when present.
-     * @param bool  $isIdentifier true if current query is subject to an ID, otherwise false.
+     * @param bool  $isIdentifier true to normalize values as non-negative integers, otherwise as strings.
      *
      * @lock-signature
      */
@@ -87,7 +87,7 @@ class IncludeQuery implements Query
      * The normalization type may be provided in `$args['type']`; it defaults to `INTEGER`.
      *
      * @param array $queryArray Initial query data.
-     * @param array $args       Optional configuration, including 'type'.
+     * @param array $args       Optional configuration, including 'isIdentifier'.
      * @return static           A new instance of the called class.
      *
      * @lock-signature
@@ -100,7 +100,7 @@ class IncludeQuery implements Query
     /**
      * Cast a value according to the configured normalization type.
      *
-     * Integer mode uses WordPress's absint() helper; string mode converts the value to a string.
+     * Identifier mode normalizes the value as a non-negative integer; otherwise, the value is converted to a string.
      *
      * @param int|float|string $value Value to normalize.
      * @return int|string             The normalized value.
@@ -138,7 +138,7 @@ class IncludeQuery implements Query
      * Returns an empty array when no values have been added; otherwise returns the 'included' key with the normalized
      * values.
      *
-     * @return array<string, array<int, int|float|string>|int|string>
+     * @return array<string, array<int, int|string>>
      *
      * @lock-signature
      */
