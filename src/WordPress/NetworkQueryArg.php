@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
+/*
+ * Copyright (c) Sina Kuhestani (EphpicMan).
+ * SPDX-License-Identifier: MIT
+ */
+
 \defined('ABSPATH') || exit;
 
-/**
- * Builds arguments for WordPress query APIs without executing a query.
- */
-
-/**
- * Builds arguments for WP_Network_Query; it does not execute the query.
- *
- * @see WP_Network_Query
- */
 class NetworkQueryArg implements QueryArg
 {
     private IncludeExcludeQueryArg $networkIds;
@@ -32,16 +28,36 @@ class NetworkQueryArg implements QueryArg
     public function __construct(array $queryArray = [])
     {
         $this->networkIds = IncludeExcludeQueryArg::make(['network__in' => $queryArray['network__in'] ?? [], 'network__not_in' => $queryArray['network__not_in'] ?? []], ['includeKey' => 'network__in', 'excludeKey' => 'network__not_in']);
-        if (array_key_exists('network_id', $queryArray)) $this->networkId = (int) $queryArray['network_id'];
-        if (array_key_exists('domain', $queryArray)) $this->domain = (string) $queryArray['domain'];
-        if (array_key_exists('path', $queryArray)) $this->path = (string) $queryArray['path'];
-        if (array_key_exists('number', $queryArray)) $this->number = (int) $queryArray['number'];
-        if (array_key_exists('offset', $queryArray)) $this->offset = (int) $queryArray['offset'];
-        if (array_key_exists('orderby', $queryArray)) $this->orderby = $queryArray['orderby'];
-        if (array_key_exists('order', $queryArray)) $this->order = (string) $queryArray['order'];
-        if (array_key_exists('fields', $queryArray)) $this->fields = (string) $queryArray['fields'];
-        if (array_key_exists('count', $queryArray)) $this->count = (bool) $queryArray['count'];
-        if (array_key_exists('update_network_cache', $queryArray)) $this->updateNetworkCache = (bool) $queryArray['update_network_cache'];
+        if (array_key_exists('network_id', $queryArray)) {
+            $this->networkId = (int) $queryArray['network_id'];
+        }
+        if (array_key_exists('domain', $queryArray)) {
+            $this->domain = (string) $queryArray['domain'];
+        }
+        if (array_key_exists('path', $queryArray)) {
+            $this->path = (string) $queryArray['path'];
+        }
+        if (array_key_exists('number', $queryArray)) {
+            $this->number = (int) $queryArray['number'];
+        }
+        if (array_key_exists('offset', $queryArray)) {
+            $this->offset = (int) $queryArray['offset'];
+        }
+        if (array_key_exists('orderby', $queryArray)) {
+            $this->orderby = $queryArray['orderby'];
+        }
+        if (array_key_exists('order', $queryArray)) {
+            $this->order = (string) $queryArray['order'];
+        }
+        if (array_key_exists('fields', $queryArray)) {
+            $this->fields = (string) $queryArray['fields'];
+        }
+        if (array_key_exists('count', $queryArray)) {
+            $this->count = (bool) $queryArray['count'];
+        }
+        if (array_key_exists('update_network_cache', $queryArray)) {
+            $this->updateNetworkCache = (bool) $queryArray['update_network_cache'];
+        }
     }
 
     public static function make(array $queryArray = [], array $args = []): static
@@ -49,11 +65,26 @@ class NetworkQueryArg implements QueryArg
         return new static($queryArray);
     }
 
-public function includeNetworks(int|array $ids): self { $this->networkIds->include($ids); return $this; }
+public function includeNetworks(int|array $ids): self
+{
+    $this->networkIds->include($ids);
 
-public function excludeNetworks(int|array $ids): self { $this->networkIds->exclude($ids); return $this; }
+        return $this;
+}
 
-public function networkId(int $id): self { $this->networkId = $id; return $this; }
+public function excludeNetworks(int|array $ids): self
+{
+    $this->networkIds->exclude($ids);
+
+        return $this;
+}
+
+public function networkId(int $id): self
+{
+    $this->networkId = $id;
+
+        return $this;
+}
 
     public function toArray(): array
     {
@@ -72,7 +103,9 @@ public function networkId(int $id): self { $this->networkId = $id; return $this;
             'update_network_cache' => $this->updateNetworkCache,
         ];
         foreach ($values as $key => $value) {
-            if (null !== $value) $args[$key] = $value;
+            if (null !== $value) {
+                $args[$key] = $value;
+            }
         }
 
         return $args;
