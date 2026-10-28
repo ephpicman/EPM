@@ -1,0 +1,224 @@
+<?php
+
+/*
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ EPM — EphpicMan Framework                                                                                            │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                      │
+│ Modification Restrictions:                                                                                           │
+│                                                                                                                      │
+│ @lock-name        The member's name must not change.                                                                 │
+│ @lock-body        The method implementation must not change.                                                         │
+│ @lock-params      Existing parameters must not change. Additional optional parameters may be appended at the end,    │
+│                   provided backward compatibility is preserved.                                                      │
+│ @lock-signature   The method signature, including parameters and return type, must not change.                       │
+│ @lock-type        The declared type must not change. For methods, this refers to the return type.                    │
+│ @lock-value       Constant values and property default values must not change.                                       │
+│ @lock-access      The member's visibility must not change.                                                           │
+│ @lock-static      The member's static status must not change.                                                        │
+│ @lock-final       The member's final status must not change.                                                         │
+│ @lock-abstract    The class or method's abstract status must not change.                                             │
+│ @lock             The member must not be modified, renamed or removed.                                               │
+│                                                                                                                      │
+│ - Apply restriction tags to the class or individual members as appropriate.                                          │
+│ - Unspecified modifications are allowed.                                                                             │
+│ - When multiple tags apply, all restrictions must be respected.                                                      │
+│ - @lock overrides all other tags and prohibits every modification to the target.                                     │
+│                                                                                                                      │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                      │
+│ This file is part of EPM, the EphpicMan Framework.                                                                   │
+│                                                                                                                      │
+│ Copyright (c) Sina Kuhestani (EphpicMan).                                                                            │
+│ Licensed under the MIT License. See the LICENSE file for details.                                                    │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+
+declare(strict_types=1);
+
+namespace EPM\WordPress;
+
+/**
+ * Builds EPM's internal search arguments from a search term and an allowlisted set of columns.
+ *
+ * The search term and selected columns are stored under EPM's internal keys, `search` and `searchColumns`. Column names
+ * are validated against the allowlist supplied at construction. Mapping these values to the argument names expected by
+ * a specific WordPress query API is the caller's responsibility. This class builds arguments only; it does not execute
+ * a query.
+ *
+ * @see WP_Query
+ * @see WP_User_Query
+ */
+class SearchQueryArg implements QueryArg
+{
+    /**
+     * The search term.
+     *
+     * A null value indicates that no search term is configured. Passing an empty string to search() resets this
+     * property to null.
+     *
+     * @var string|null
+     */
+    protected ?string $search = null;
+
+    /**
+     * The validated columns to search.
+     *
+     * Contains unique column names accepted by the configured allowlist. An empty array indicates that no search
+     * columns are configured.
+     *
+     * @var array<int, string>
+     */
+    protected array $searchColumns = [];
+
+    /**
+     * The column names permitted for searching.
+     *
+     * This allowlist is supplied during construction and is used to validate values passed to searchColumns().
+     * Duplicate entries are removed while preserving the order of their first occurrence.
+     *
+     * @var array<int, string>
+     */
+    protected array $allowedSearchColumns;
+
+    /**
+     * Initialise the search query.
+     *
+     * Recognised query-array keys are search and searchColumns. Initial values are applied through the corresponding
+     * setter methods; unrecognised keys are ignored.
+     *
+     * @param array<int, string> $allowedSearchColumns Column names permitted for searching.
+     * @param array<string, mixed> $queryArray         Initial search configuration.
+     */
+    public function __construct(array $allowedSearchColumns, array $queryArray = [])
+    {
+        foreach ($allowedSearchColumns as $column) {
+            if (!\is_string($column)) {
+                throw new \InvalidArgumentException(
+                    'Every allowed search column must be a string.'
+                );
+            }
+        }
+
+        $this->allowedSearchColumns = \array_values(
+            \array_unique($allowedSearchColumns, SORT_STRING)
+        );
+
+        if (isset($queryArray['search'])) {
+            $this->search($queryArray['search']);
+        }
+
+        if (isset($queryArray['searchColumns'])) {
+            $this->searchColumns($queryArray['searchColumns']);
+        }
+    }
+
+    /**
+     * Create an instance from query values and construction arguments.
+     *
+     * The $args array must contain an allowedSearchColumns entry defining the columns that may be selected.
+     *
+     * @param array<string, mixed> $queryArray Initial search configuration.
+     * @param array<string, mixed> $args       Additional construction arguments.
+     * @return static                          A new search query instance.
+     * @throws \InvalidArgumentException       If allowedSearchColumns is missing.
+     */
+    public static function make(array $queryArray = [], array $args = []): static
+    {
+        if (!isset($args['allowedSearchColumns'])) {
+            throw new \InvalidArgumentException(
+                'Allowed search columns must be provided.'
+            );
+        }
+
+        return new static(
+            $args['allowedSearchColumns'],
+            $queryArray
+        );
+    }
+
+    /**
+     * Set the search term.
+     *
+     * Passing an empty string clears the configured search term.
+     *
+     * @param string $value The search term.
+     * @return self         The current instance for method chaining.
+     */
+    public function search(string $value): self
+    {
+        $this->search = '' === $value ? null : $value;
+
+        return $this;
+    }
+
+    /**
+     * Set the columns in which the search should be performed.
+     *
+     * Accepts a single column name or an array of column names. Every value must be a string present in the configured
+     * allowlist. Duplicate values are removed while preserving their first occurrence.
+     *
+     * @param string|array<int, string> $value A column name or an array of names.
+     * @return self                            The current instance for method chaining.
+     * @throws \InvalidArgumentException       If a value is not a string or is not allowed.
+     */
+    public function searchColumns(string|array $value): self
+    {
+        $values = \is_array($value) ? $value : [$value];
+
+        $values = \array_values(
+            \array_unique(
+                \array_filter(
+                    $values,
+                    function ($item): bool {
+                        if (!\is_string($item)) {
+                            throw new \InvalidArgumentException('Every search column must be a string.');
+                        }
+
+                        if ('' === $item) {
+                            return false;
+                        }
+
+                        if (!\in_array($item, $this->allowedSearchColumns, true)) {
+                            throw new \InvalidArgumentException(
+                                'Invalid search column: ' . $item
+                            );
+                        }
+
+                        return true;
+                    }
+                ),
+                SORT_STRING
+            )
+        );
+
+        $this->searchColumns = $values;
+
+        return $this;
+    }
+
+    /**
+     * Build an array of the configured search values using EPM's internal keys.
+     *
+     * The `search` and `searchColumns` keys are included only when their corresponding values are configured. This is
+     * EPM's internal representation, not a guarantee that the array can be passed directly to every WordPress query API.
+     *
+     * @return array<string, string|array<int, string>> The configured search values.
+     *
+     * @lock-signature
+     */
+    public function toArray(): array
+    {
+        $output = [];
+
+        if (null !== $this->search) {
+            $output['search'] = $this->search;
+        }
+
+        if ([] !== $this->searchColumns) {
+            $output['searchColumns'] = $this->searchColumns;
+        }
+
+        return $output;
+    }
+}
