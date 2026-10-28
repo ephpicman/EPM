@@ -4,15 +4,10 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
-/*
- * Copyright (c) Sina Kuhestani (EphpicMan).
- * SPDX-License-Identifier: MIT
- */
-
-\defined('ABSPATH') || exit;
-
 use EPM\Utils\ArrayUtil;
 use EPM\Utils\NumberUtil;
+
+\defined('ABSPATH') || exit;
 
 class IncludeQueryArg implements QueryArg
 {
