@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
+/*
+ * Copyright (c) Sina Kuhestani (EphpicMan).
+ * SPDX-License-Identifier: MIT
+ */
+
 \defined('ABSPATH') || exit;
 
-/**
- * Builds the argument array for WordPress's WP_User_Query.
- *
- * This class normalizes user-query options and delegates inclusion/exclusion, role, login, nicename, search, and
- * metadata conditions to their dedicated argument builders. toArray() returns arguments for WP_User_Query; this
- * class does not instantiate or execute a query and does not retrieve or count users.
- *
- * @see WP_User_Query
- */
 class UserQueryArg implements QueryArg
 {
     public const USER_COLUMNS = [
