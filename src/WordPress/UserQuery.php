@@ -562,10 +562,15 @@ class UserQuery
             $args['nicename'] = $nicenameQuery['is'];
         }
 
-        $args = \array_merge(
-            $args,
-            $this->searchQuery->toArray()
-        );
+        $searchQuery = $this->searchQuery->toArray();
+
+        if (isset($searchQuery['search'])) {
+            $args['search'] = $searchQuery['search'];
+        }
+
+        if (isset($searchQuery['searchColumns'])) {
+            $args['search_columns'] = $searchQuery['searchColumns'];
+        }
 
         if (null !== $this->orderBy) {
             $args['orderby'] = $this->orderBy;
