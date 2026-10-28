@@ -47,7 +47,7 @@ namespace EPM\WordPress;
  * @see WP_Query
  * @see WP_User_Query
  */
-class SearchQuery implements Query
+class SearchQuery implements QueryArg
 {
     /**
      * The search term.
