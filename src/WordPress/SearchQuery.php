@@ -196,7 +196,7 @@ class SearchQuery implements Query
     }
 
     /**
-     * Convert the configured search values to WordPress query arguments.
+     * Export the configured search values using EPM's internal keys.
      *
      * Returns EPM's internal keys. Properties that are not configured are omitted from the result.
      *
