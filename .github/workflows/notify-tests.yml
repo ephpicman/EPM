@@ -1,0 +1,32 @@
+name: Notify EPM Tests
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  notify-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch test run
+        env:
+          EPM_TESTS_TOKEN: ${{ secrets.EPM_TESTS_TOKEN }}
+          EPM_COMMIT_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$EPM_TESTS_TOKEN" ]; then
+            echo "::error::Add EPM_TESTS_TOKEN to EPM repository secrets. It needs Contents read/write access to ephpicman/EPM-TESTS."
+            exit 1
+          fi
+
+          curl --fail --silent --show-error \
+            --request POST \
+            --url https://api.github.com/repos/ephpicman/EPM-TESTS/dispatches \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $EPM_TESTS_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --header "Content-Type: application/json" \
+            --data "{\"event_type\":\"epm-main-updated\",\"client_payload\":{\"sha\":\"$EPM_COMMIT_SHA\"}}"
