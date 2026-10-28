@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
+/*
+ * Copyright (c) Sina Kuhestani (EphpicMan).
+ * SPDX-License-Identifier: MIT
+ */
+
 \defined('ABSPATH') || exit;
 
 class SiteQueryArg implements QueryArg
