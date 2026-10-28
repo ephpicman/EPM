@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace EPM\WordPress;
 
-/*
- * Copyright (c) Sina Kuhestani (EphpicMan).
- * SPDX-License-Identifier: MIT
- */
-
 \defined('ABSPATH') || exit;
 
 class CommentQueryArg implements QueryArg
@@ -107,33 +102,33 @@ class CommentQueryArg implements QueryArg
         return new static($queryArray);
     }
 
-public function includeComments(int|array $ids): self
-{
-    $this->commentIds->include($ids);
+    public function includeComments(int|array $ids): self
+    {
+        $this->commentIds->include($ids);
 
         return $this;
-}
+    }
 
-public function excludeComments(int|array $ids): self
-{
-    $this->commentIds->exclude($ids);
-
-        return $this;
-}
-
-public function postId(int $id): self
-{
-    $this->postId = $id;
+    public function excludeComments(int|array $ids): self
+    {
+        $this->commentIds->exclude($ids);
 
         return $this;
-}
+    }
 
-public function search(string $value): self
-{
-    $this->search = $value;
+    public function postId(int $id): self
+    {
+        $this->postId = $id;
 
         return $this;
-}
+    }
+
+    public function search(string $value): self
+    {
+        $this->search = $value;
+
+        return $this;
+    }
 
     public function toArray(): array
     {
