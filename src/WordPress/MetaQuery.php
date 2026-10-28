@@ -475,7 +475,7 @@ class MetaQuery implements Query
 			return $this;
 		}
 
-		if (isset($this->query['relation']) && 'AND' === $this->query['relation']) {
+		if (!isset($this->query['relation']) || 'AND' === $this->query['relation']) {
 			$this->query[] = $clause;
 		} else {
 			$this->query = [
