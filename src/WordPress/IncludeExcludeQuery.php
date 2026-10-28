@@ -41,9 +41,10 @@ namespace EPM\WordPress;
 use EPM\Utils\ArrayUtil;
 
 /**
- * Builds include and exclude lists for WordPress query arguments.
+ * Builds inclusion and exclusion lists as part of EPM's internal query structure.
  *
- * Extends IncludeQuery with an exclusion list. Values added to one list are removed from the other list.
+ * Extends IncludeQuery with an exclusion list. Values added to one list are removed from the other list. A separate
+ * layer translates the internal 'included' and 'excluded' keys for the target WordPress API.
  */
 class IncludeExcludeQuery extends IncludeQuery
 {
@@ -119,7 +120,7 @@ class IncludeExcludeQuery extends IncludeQuery
     }
 
     /**
-     * Maps the included and excluded values to the argument names expected by the target WordPress API.
+     * Returns the inclusion and exclusion lists in EPM's internal query structure.
      *
      * @return array<string, mixed>
      *
