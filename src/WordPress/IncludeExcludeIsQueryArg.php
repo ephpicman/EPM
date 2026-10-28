@@ -7,6 +7,11 @@ namespace EPM\WordPress;
 use EPM\Utils\ArrayUtil;
 use InvalidArgumentException;
 
+/*
+ * Copyright (c) Sina Kuhestani (EphpicMan).
+ * SPDX-License-Identifier: MIT
+ */
+
 \defined('ABSPATH') || exit;
 
 class IncludeExcludeIsQueryArg extends IncludeExcludeQueryArg
