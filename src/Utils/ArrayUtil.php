@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EphpicMan\Utils;
+namespace EphpicMan\Framework\Utils;
 
 final class ArrayUtil
 {

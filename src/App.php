@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EphpicMan;
+namespace EphpicMan\Framework;
 
 final class App
 {

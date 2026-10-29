@@ -75,7 +75,7 @@ if (!class_exists('EphpicManLoader', false)) {
 
             spl_autoload_register(
                 static function (string $class) use ($frameworkSourcePath): void {
-                    self::autoloadClass($class, ['EPM\\' => $frameworkSourcePath]);
+                    self::autoloadClass($class, ['EphpicMan\\Framework\\' => $frameworkSourcePath]);
                 }
             );
 
@@ -108,7 +108,7 @@ if (!class_exists('EphpicManLoader', false)) {
         }
     }
 
-    add_action('wp_loaded', static fn(): void => EphpicMan\App::getInstance()->run());
+    add_action('wp_loaded', static fn(): void => EphpicMan\Framework\App::getInstance()->run());
 }
 
 /*
@@ -121,7 +121,7 @@ if (!class_exists('EphpicManLoader', false)) {
  *
  * EphpicManLoader::register(
  *     __DIR__,
- *     'Ephpicman\\MyPlugin\\',
+ *     'EphpicMan\\MyPlugin\\',
  *     '1.4.0',
  * );
  */
