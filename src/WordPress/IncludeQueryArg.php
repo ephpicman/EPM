@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace EPM\WordPress;
+namespace EphpicMan\WordPress;
 
-use EPM\Utils\ArrayUtil;
-use EPM\Utils\NumberUtil;
+use EphpicMan\Utils\ArrayUtil;
+use EphpicMan\Utils\NumberUtil;
 
 \defined('ABSPATH') || exit;
 
