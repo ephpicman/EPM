@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EphpicMan\WordPress;
+namespace EphpicMan\Framework\WordPress;
 
 \defined('ABSPATH') || exit;
 
