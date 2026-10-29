@@ -24,7 +24,6 @@ if (!class_exists('EphpicManLoader', false)) {
                 return;
 
             $pluginNamespace .= '\\';
-                return;
 
             $pluginPath = realpath($pluginPath);
             if (false === $pluginPath)
