@@ -30,17 +30,17 @@ jobs:
           - php: "8.5"
             phpunit: "13"
     steps:
-      - name: Check out EPM-TESTS
+      - name: Check out Tests
         uses: actions/checkout@v4
         with:
-          repository: ephpicman/EPM-TESTS
+          repository: ephpicman/Tests
           ref: main
-          path: EPM-TESTS
+          path: Tests
 
       - name: Check out the EPM revision being tested
         uses: actions/checkout@v4
         with:
-          path: EPM-TESTS/EPM
+          path: Tests/EPM
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -49,9 +49,9 @@ jobs:
           coverage: none
 
       - name: Download compatible PHPUnit
-        working-directory: EPM-TESTS
+        working-directory: Tests
         run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-${{ matrix.phpunit }}.phar --output phpunit.phar
 
       - name: Run unit tests
-        working-directory: EPM-TESTS
+        working-directory: Tests
         run: php phpunit.phar
