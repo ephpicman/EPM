@@ -19,8 +19,11 @@ if (!class_exists('EphpicManLoader', false)) {
             if (self::$initialized)
                 return;
 
-            $pluginNamespace = trim($pluginNamespace, '\\') . '\\';
+            $pluginNamespace = trim($pluginNamespace, '\\');
             if ('' === $pluginNamespace)
+                return;
+
+            $pluginNamespace .= '\\';
                 return;
 
             $pluginPath = realpath($pluginPath);
