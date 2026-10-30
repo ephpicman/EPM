@@ -65,13 +65,29 @@ jobs:
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962
         with:
           php-version: "8.5"
+          extensions: dom, mbstring, xml, xmlwriter
           coverage: xdebug
 
-      - name: Download PHPUnit 13
-        run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-13.phar --output phpunit.phar
+      - name: Install PHPUnit 13
+        run: |
+          mkdir -p "$RUNNER_TEMP/phpunit"
+          cd "$RUNNER_TEMP/phpunit"
+          composer init --no-interaction --name=epm/coverage-tools
+          composer require --no-interaction --no-progress phpunit/phpunit:13.4.5
+          echo "$RUNNER_TEMP/phpunit/vendor/bin" >> "$GITHUB_PATH"
+
+      - name: Verify PHPUnit JSONL support
+        run: |
+          set -euo pipefail
+          phpunit --version
+          phpunit --help | grep -- --coverage-jsonl
 
       - name: Generate JSONL coverage report with branch coverage
-        run: php phpunit.phar --configuration phpunit.xml --branch-coverage --coverage-jsonl=coverage
+        run: |
+          phpunit --configuration phpunit.xml --branch-coverage --coverage-jsonl=coverage
+          test -s coverage/meta.json
+          test -s coverage/coverage.jsonl
+          test -f coverage/tests.jsonl
 
       - name: Add coverage report to workflow summary
         run: php scripts/write-coverage-summary.php

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+defined('ABSPATH') || define('ABSPATH', dirname(__DIR__) . '/');
+
 $sourceDirectory = dirname(__DIR__) . '/src';
 
 if (!is_dir($sourceDirectory)) {

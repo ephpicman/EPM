@@ -88,6 +88,12 @@ if ([] === $fileMetrics || 0 === $totalLines['executable']) {
 
 ksort($fileMetrics, SORT_NATURAL | SORT_FLAG_CASE);
 
+$lineCoveragePassed = 0 < $totalLines['executable']
+    && 100 * $totalLines['executed'] >= 70 * $totalLines['executable'];
+$branchCoveragePassed = 0 < $totalBranches['total']
+    && 100 * $totalBranches['executed'] >= 50 * $totalBranches['total'];
+$coveragePassed = $lineCoveragePassed && $branchCoveragePassed;
+
 $formatCoverage = static function (int $covered, int $total): string {
     if (0 === $total) {
         return 'N/A';
@@ -111,6 +117,21 @@ $lines = [
         '| Branch Coverage | %s |',
         $formatCoverage($totalBranches['executed'], $totalBranches['total'])
     ),
+    '',
+    '### Coverage Thresholds',
+    '',
+    '| Metric | Required | Result |',
+    '|---|---:|---|',
+    sprintf(
+        '| Line Coverage | 70.0%% | %s |',
+        $lineCoveragePassed ? '**PASS**' : '**FAIL**'
+    ),
+    sprintf(
+        '| Branch Coverage | 50.0%% | %s |',
+        $branchCoveragePassed ? '**PASS**' : '**FAIL**'
+    ),
+    '',
+    sprintf('**Overall result: %s**', $coveragePassed ? 'PASS' : 'FAIL'),
     '',
     '### Per-file',
     '',
@@ -137,3 +158,10 @@ if (false === file_put_contents($summaryPath, implode(PHP_EOL, $lines) . PHP_EOL
 }
 
 echo "Coverage report added to the GitHub Actions job summary.\n";
+
+if (!$coveragePassed) {
+    fwrite(STDERR, "Coverage thresholds not met: Line coverage must be at least 70.0% and branch coverage must be at least 50.0%.\n");
+    exit(1);
+}
+
+echo "Coverage thresholds passed.\n";
