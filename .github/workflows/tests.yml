@@ -66,21 +66,17 @@ jobs:
         with:
           php-version: "8.5"
           coverage: xdebug
-
-      - name: Download PHPUnit 13
-        run: |
-          curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-13.phar --output phpunit.phar
-          test "$(wc -c < phpunit.phar)" -gt 1000000
+          tools: phpunit:13.4.1
 
       - name: Verify PHPUnit JSONL support
         run: |
           set -euo pipefail
-          php phpunit.phar --version
-          php phpunit.phar --help | grep -- --coverage-jsonl
+          phpunit --version
+          phpunit --help | grep -- --coverage-jsonl
 
       - name: Generate JSONL coverage report with branch coverage
         run: |
-          php phpunit.phar --configuration phpunit.xml --branch-coverage --coverage-jsonl=coverage
+          phpunit --configuration phpunit.xml --branch-coverage --coverage-jsonl=coverage
           test -s coverage/meta.json
           test -s coverage/coverage.jsonl
           test -f coverage/tests.jsonl
