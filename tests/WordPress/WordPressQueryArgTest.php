@@ -61,7 +61,7 @@ final class WordPressQueryArgTest extends TestCase
             ['isIdentifier' => false, 'includeKey' => 'included', 'excludeKey' => 'excluded']
         );
         self::assertSame(
-            ['included' => [1], 'excluded' => [2], 'is' => 'publish'],
+            ['included' => ['1'], 'excluded' => ['2'], 'is' => 'publish'],
             $single->toArray()
         );
         self::assertSame([], $single->is('')->toArray());
@@ -270,7 +270,7 @@ final class WordPressQueryArgTest extends TestCase
 
         $args = $query->toArray();
         self::assertSame([2, 4], $args['post__in']);
-        self::assertSame([3], $args['post__not_in']);
+        self::assertSame([3, 1], $args['post__not_in']);
         self::assertSame(['page'], $args['post_type__in']);
         self::assertSame(['book'], $args['post_type']);
         self::assertSame('updated', $args['s']);
