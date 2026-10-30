@@ -57,7 +57,7 @@ final class WordPressQueryArgTest extends TestCase
     public function testIncludeExcludeIsQueryArgSupportsSingleAndMultipleValues(): void
     {
         $single = IncludeExcludeIsQueryArg::make(
-            ['is' => 'publish', 'include' => [1], 'exclude' => [2]],
+            ['is' => 'publish', 'included' => [1], 'excluded' => [2]],
             ['isIdentifier' => false, 'includeKey' => 'included', 'excludeKey' => 'excluded']
         );
         self::assertSame(
@@ -179,9 +179,10 @@ final class WordPressQueryArgTest extends TestCase
             });
 
         $array = $query->toArray();
-        self::assertSame('OR', $array['relation']);
+        self::assertSame('AND', $array['relation']);
+        self::assertSame('OR', $array[0]['relation']);
         self::assertSame('=', $array[0][0][0]['compare']);
-        self::assertSame('IN', $array[0][1]['compare']);
+        self::assertSame('IN', $array[0][0][1]['compare']);
         self::assertNotEmpty($array);
     }
 
@@ -270,7 +271,7 @@ final class WordPressQueryArgTest extends TestCase
         $args = $query->toArray();
         self::assertSame([2, 4], $args['post__in']);
         self::assertSame([3], $args['post__not_in']);
-        self::assertSame(['book', 'page'], $args['post_type__in']);
+        self::assertSame(['page'], $args['post_type__in']);
         self::assertSame(['book'], $args['post_type']);
         self::assertSame('updated', $args['s']);
         self::assertSame(5, $args['posts_per_page']);
@@ -484,7 +485,7 @@ final class WordPressQueryArgTest extends TestCase
         self::assertSame([3, 1], $args['exclude']);
         self::assertSame(['administrator'], $args['role']);
         self::assertSame(['editor'], $args['role__in']);
-        self::assertSame(['author'], $args['role__not_in']);
+        self::assertSame(['subscriber', 'author'], $args['role__not_in']);
         self::assertSame(['manage_options'], $args['capability']);
         self::assertSame('root', $args['login']);
         self::assertSame('root-name', $args['nicename']);
