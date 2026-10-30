@@ -57,37 +57,21 @@ jobs:
     needs: tests
     runs-on: ubuntu-latest
     if: always() && needs.tests.result == 'success'
-    permissions:
-      contents: write
     steps:
       - name: Check out Framework
         uses: actions/checkout@v4
 
-      - name: Set up PHP with PCOV
+      - name: Set up PHP with Xdebug
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962
         with:
           php-version: "8.5"
-          coverage: pcov
+          coverage: xdebug
 
       - name: Download PHPUnit 13
         run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-13.phar --output phpunit.phar
 
-      - name: Generate Clover coverage report
-        run: php phpunit.phar --configuration phpunit.xml --coverage-clover=coverage.xml
+      - name: Generate JSONL coverage report with branch coverage
+        run: php phpunit.phar --configuration phpunit.xml --branch-coverage --coverage-jsonl=coverage
 
-      - name: Update generated coverage section
-        run: php scripts/update-coverage.php
-
-      - name: Commit COVERAGE.md only when coverage content changed
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        run: |
-          if git diff --quiet -- COVERAGE.md; then
-            echo "Coverage report is unchanged; no commit is needed."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add COVERAGE.md
-          git commit -m "Update test coverage report"
-          git push
+      - name: Add coverage report to workflow summary
+        run: php scripts/write-coverage-summary.php
