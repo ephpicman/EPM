@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use EphpicMan\\Framework\\Utils\\ArrayUtil;
-use PHPUnit\\Framework\\TestCase;
+use EphpicMan\Framework\Utils\ArrayUtil;
+use PHPUnit\Framework\TestCase;
 
 final class ArrayUtilTest extends TestCase
 {
