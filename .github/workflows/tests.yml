@@ -73,7 +73,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/phpunit"
           cd "$RUNNER_TEMP/phpunit"
           composer init --no-interaction --name=epm/coverage-tools
-          composer require --no-interaction --no-progress phpunit/phpunit:13.4.1
+          composer require --no-interaction --no-progress phpunit/phpunit:13.4.5
           echo "$RUNNER_TEMP/phpunit/vendor/bin" >> "$GITHUB_PATH"
 
       - name: Verify PHPUnit JSONL support
