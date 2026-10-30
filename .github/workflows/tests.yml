@@ -70,8 +70,8 @@ jobs:
       - name: Download PHPUnit 13
         run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-13.phar --output phpunit.phar
 
-      - name: Generate Clover coverage report with branch coverage
-        run: php phpunit.phar --configuration phpunit.xml --branch-coverage --coverage-clover=coverage.xml
+      - name: Generate JSONL coverage report with branch coverage
+        run: php phpunit.phar --configuration phpunit.xml --branch-coverage --coverage-jsonl=coverage
 
       - name: Add coverage report to workflow summary
         run: php scripts/write-coverage-summary.php
