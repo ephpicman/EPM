@@ -10,6 +10,10 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    <coverage
+        includeUncoveredFiles="true"
+        branchCoverage="true"
+    />
     <source>
         <include>
             <directory>src</directory>
