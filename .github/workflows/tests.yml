@@ -72,8 +72,13 @@ jobs:
 
       - name: Verify PHPUnit JSONL support
         run: |
-          php phpunit.phar --version
-          php phpunit.phar --help | grep -- --coverage-jsonl
+          set -euxo pipefail
+          test -s phpunit.phar
+          file phpunit.phar
+          wc -c phpunit.phar
+          head -c 32 phpunit.phar | od -An -tx1c
+          php -d display_errors=1 -d error_reporting=-1 phpunit.phar --version
+          php -d display_errors=1 -d error_reporting=-1 phpunit.phar --help | grep -- --coverage-jsonl
 
       - name: Generate JSONL coverage report with branch coverage
         run: |
