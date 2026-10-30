@@ -4,10 +4,17 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: epm-unit-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   tests:
@@ -30,17 +37,8 @@ jobs:
           - php: "8.5"
             phpunit: "13"
     steps:
-      - name: Check out EPM-TESTS
+      - name: Check out Framework
         uses: actions/checkout@v4
-        with:
-          repository: ephpicman/EPM-TESTS
-          ref: main
-          path: EPM-TESTS
-
-      - name: Check out the EPM revision being tested
-        uses: actions/checkout@v4
-        with:
-          path: EPM-TESTS/EPM
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -49,9 +47,7 @@ jobs:
           coverage: none
 
       - name: Download compatible PHPUnit
-        working-directory: EPM-TESTS
         run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-${{ matrix.phpunit }}.phar --output phpunit.phar
 
       - name: Run unit tests
-        working-directory: EPM-TESTS
-        run: php phpunit.phar
+        run: php phpunit.phar --configuration phpunit.xml
