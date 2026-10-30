@@ -35,7 +35,7 @@ $metricNames = [
 $coverageByFile = [];
 
 foreach (($coverageXml->xpath('//file') ?: []) as $fileNode) {
-    $reportedPath = str_replace('\\\\', '/', (string) $fileNode['name']);
+    $reportedPath = str_replace('\\', '/', (string) $fileNode['name']);
     $marker = '/src/';
     $markerPosition = strrpos($reportedPath, $marker);
 
@@ -78,7 +78,7 @@ foreach ($iterator as $file) {
         continue;
     }
 
-    $relativePath = str_replace('\\\\', '/', substr($file->getPathname(), strlen($sourceRoot) + 1));
+    $relativePath = str_replace('\\', '/', substr($file->getPathname(), strlen($sourceRoot) + 1));
     $sourceFiles[$relativePath] = $relativePath;
 }
 
@@ -116,11 +116,11 @@ foreach ($sourceFiles as $relativePath) {
         $totalMetrics[$metric] += $metrics[$metric];
     }
 
-    $className = preg_replace('/\\.php$/', '', $relativePath);
-    $displayClassName = str_replace('/', '\\\\', $className);
+    $className = preg_replace('/\.php$/', '', $relativePath);
+    $displayClassName = str_replace('/', '\\', $className);
     $encodedPath = str_replace('%2F', '/', rawurlencode($relativePath));
     $sourceUrl = 'https://github.com/ephpicman/Framework/blob/main/src/' . $encodedPath;
-    $testRelativePath = preg_replace('/\\.php$/', 'Test.php', $relativePath);
+    $testRelativePath = preg_replace('/\.php$/', 'Test.php', $relativePath);
     $testPath = $repositoryRoot . '/tests/' . $testRelativePath;
     $testUrl = 'https://github.com/ephpicman/Framework/blob/main/tests/' . str_replace('%2F', '/', rawurlencode($testRelativePath));
     $testLink = is_file($testPath) ? '[↗](' . $testUrl . ' "View test")' : '';
