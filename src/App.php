@@ -1,95 +1,42 @@
 <?php
-/**
- * Application entry point.
- *
- * @package EPM
- */
 
-namespace EPM;
+declare(strict_types=1);
 
-defined( 'ABSPATH' ) || exit;
+namespace EphpicMan\Framework;
 
-/**
- * Coordinates registered plugins and themes.
- */
-final class App {
+final class App
+{
+    /** @var App|null */
+    private static ?App $instance = null;
+    /** @var array<int, string> */
+    private array $plugins = [];
+    /** @var array<int, string> */
+    private array $themes = [];
 
-	/**
-	 * The single instance of this class.
-	 *
-	 * @var App|null
-	 */
-	private static ?App $instance = null;
+    public static function getInstance(): App
+    {
+        return self::$instance ??= new self();
+    }
 
-	/**
-	 * Registered plugin paths.
-	 *
-	 * @var array<int, string>
-	 */
-	private array $plugins = array();
+    private function __construct() {}
 
-	/**
-	 * Registered theme paths.
-	 *
-	 * @var array<int, string>
-	 */
-	private array $themes = array();
+    public function registerPlugin(string $path): void
+    {
+        $this->plugins[] = $path;
+    }
 
-	/**
-	 * Retrieve the singleton instance.
-	 *
-	 * @return App
-	 */
-	public static function get_instance(): App {
-		if ( null === self::$instance ) {
-			self::$instance = new self();
-		}
+    public function registerTheme(string $path): void
+    {
+        $this->themes[] = $path;
+    }
 
-		return self::$instance;
-	}
+    public function run(): void
+    {
+        // Application orchestration will be implemented here.
+    }
 
-	/**
-	 * Prevent direct construction.
-	 */
-	private function __construct() {}
-
-	/**
-	 * Register a plugin directory.
-	 *
-	 * @param string $path Path to the plugin directory.
-	 *
-	 * @return void
-	 */
-	public function registerPlugin( string $path ): void {
-		$this->plugins[] = $path;
-	}
-
-	/**
-	 * Register a theme directory.
-	 *
-	 * @param string $path Path to the theme directory.
-	 *
-	 * @return void
-	 */
-	public function registerTheme( string $path ): void {
-		$this->themes[] = $path;
-	}
-
-	/**
-	 * Run the application.
-	 *
-	 * @return void
-	 */
-	public function run(): void {
-		// Application orchestration will be implemented here.
-	}
-
-	/**
-	 * Terminate the application request.
-	 *
-	 * @return void
-	 */
-	public function terminate(): void {
-		// Final request handling will be implemented here.
-	}
+    public function terminate(): void
+    {
+        // Final request handling will be implemented here.
+    }
 }

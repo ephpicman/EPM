@@ -12,7 +12,7 @@ if (!is_dir($sourceDirectory)) {
 
 spl_autoload_register(
     static function (string $class) use ($sourceDirectory): void {
-        $prefix = 'EPM\\';
+        $prefix = 'EphpicMan\\Framework\\';
 
         if (0 !== strpos($class, $prefix)) {
             return;

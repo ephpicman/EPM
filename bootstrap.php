@@ -1,173 +1,116 @@
 <?php
 
-defined( 'ABSPATH' ) || exit;
+declare(strict_types=1);
 
-if ( ! class_exists( 'EpmLoader', false ) ) {
-    final class EpmLoader {
+defined('ABSPATH') || exit;
 
-        /**
-         * Registered EPM version candidates.
-         *
-         * @var array<string, array{version: string, path: string}>
-         */
-        private static array $candidates = array();
-
-        /**
-         * Registered product namespace mappings.
-         *
-         * @var array<string, string>
-         */
-        private static array $products = array();
-
-        /**
-         * Whether the finalization hook has been registered.
-         */
-        private static bool $hook_registered = false;
-
-        /**
-         * Whether the autoloader has been initialized.
-         */
+if (!class_exists('EphpicManLoader', false)) {
+    final class EphpicManLoader
+    {
+        /** @var array<string, array{version: string, path: string}> */
+        private static array $availableFrameworkInstances = [];
+        /** @var array<string, string> */
+        private static array $products = [];
+        private static bool $isFinalizationHookRegistered = false;
         private static bool $initialized = false;
 
-        /**
-         * Register an EPM version candidate and product namespace.
-         *
-         * @param string $version      EPM version.
-         * @param string $namespace    Product namespace.
-         * @param string $plugin_path Path to the product's root directory.
-         *
-         * @return void
-         */
-        public static function register(
-            string $version,
-            string $namespace,
-            string $plugin_path
-        ): void {
-            if ( self::$initialized ) {
+        public static function register(string $pluginPath, string $pluginNamespace, string $pluginVersion): void
+        {
+            if (self::$initialized)
                 return;
-            }
 
-            $namespace   = trim( $namespace, '\\' ) . '\\';
-            $plugin_path = realpath( $plugin_path );
-
-            if ( false === $plugin_path ) {
+            $pluginNamespace = trim($pluginNamespace, '\\');
+            if ('' === $pluginNamespace)
                 return;
-            }
 
-            $epm_path     = realpath( $plugin_path . '/epm' );
-            $product_path = realpath( $plugin_path . '/src' );
+            $pluginNamespace .= '\\';
+
+            $pluginPath = realpath($pluginPath);
+            if (false === $pluginPath)
+                return;
+
+            $frameworkPath = "{$pluginPath}/epm";
+            $productPath = "{$pluginPath}/src";
 
             if (
-                false === $epm_path
-                || false === $product_path
-                || ! is_dir( $epm_path . '/src' )
-                || ! is_dir( $product_path )
-                || ! preg_match(
-                    '/^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$/',
-                    $version
-                )
-                || '' === $namespace
+                !is_dir("{$frameworkPath}/src") ||
+                !is_dir($productPath) ||
+                !preg_match('/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/', $pluginVersion)
             ) {
                 return;
             }
 
-            self::$candidates[ $epm_path ] = array(
-                'version' => $version,
-                'path'    => $epm_path,
-            );
+            self::$availableFrameworkInstances[$frameworkPath] = [
+                'version' => $pluginVersion,
+                'path' => $frameworkPath,
+            ];
 
-            self::$products[ $namespace ] = $product_path;
+            self::$products[$pluginNamespace] = $productPath;
 
-            if ( self::$hook_registered ) {
+            if (self::$isFinalizationHookRegistered)
                 return;
-            }
 
-            self::$hook_registered = true;
+            self::$isFinalizationHookRegistered = true;
 
-            add_action(
-                'after_setup_theme',
-                array( self::class, 'initialize' ),
-                PHP_INT_MAX
-            );
+            add_action('after_setup_theme', [self::class, 'initialize'], PHP_INT_MAX);
         }
 
-        /**
-         * Initialize the autoloader using the highest registered EPM version.
-         *
-         * @return void
-         */
-        public static function initialize(): void {
-            if ( self::$initialized || empty( self::$candidates ) ) {
+        public static function initialize(): void
+        {
+            if (self::$initialized || empty(self::$availableFrameworkInstances))
                 return;
-            }
 
-            $candidates = array_values( self::$candidates );
+            $availableFrameworkInstances = array_values(self::$availableFrameworkInstances);
 
             usort(
-                $candidates,
-                static function ( array $a, array $b ): int {
-                    return version_compare( $b['version'], $a['version'] );
-                }
+                $availableFrameworkInstances,
+                static fn(array $a, array $b): int => version_compare($b['version'], $a['version'])
             );
 
-            $selected = $candidates[0];
-            $epm_src  = $selected['path'] . '/src';
+            $selected = $availableFrameworkInstances[0];
+            $frameworkSourcePath = $selected['path'] . '/src';
 
-            if ( ! is_dir( $epm_src ) ) {
+            if (!is_dir($frameworkSourcePath))
                 return;
-            }
 
             self::$initialized = true;
 
             spl_autoload_register(
-                static function ( string $class ) use ( $epm_src ): void {
-                    self::load_class( $class, array(
-                        'EPM\\' => $epm_src,
-                    ) );
+                static function (string $class) use ($frameworkSourcePath): void {
+                    self::autoloadClass($class, ['EphpicMan\\Framework\\' => $frameworkSourcePath]);
                 }
             );
 
-            foreach ( self::$products as $namespace => $src ) {
+            foreach (self::$products as $pluginNamespace => $src) {
                 spl_autoload_register(
-                    static function ( string $class ) use ( $namespace, $src ): void {
-                        self::load_class( $class, array(
-                            $namespace => $src,
-                        ) );
+                    static function (string $class) use ($pluginNamespace, $src): void {
+                        self::autoloadClass($class, array(
+                            $pluginNamespace => $src,
+                        ));
                     }
                 );
             }
         }
 
-        /**
-         * Load a class using a namespace-to-directory mapping.
-         *
-         * @param string               $class    Fully qualified class name.
-         * @param array<string,string> $prefixes Namespace prefixes and source directories.
-         *
-         * @return void
-         */
-        private static function load_class( string $class, array $prefixes ): void {
-            foreach ( $prefixes as $prefix => $directory ) {
-                if ( 0 !== strpos( $class, $prefix ) ) {
+        private static function autoloadClass(string $class, array $prefixes): void
+        {
+            foreach ($prefixes as $prefix => $directory) {
+                if (0 !== strpos($class, $prefix))
                     continue;
-                }
 
-                $relative_class = substr( $class, strlen( $prefix ) );
-                $relative_path  = str_replace( '\\', DIRECTORY_SEPARATOR, $relative_class );
-                $file           = $directory . DIRECTORY_SEPARATOR . $relative_path . '.php';
+                $relativeClass = substr($class, strlen($prefix));
+                $relativePath = str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass);
+                $file = $directory . DIRECTORY_SEPARATOR . $relativePath . '.php';
 
-                if ( is_file( $file ) && is_readable( $file ) ) {
+                if (is_file($file) && is_readable($file))
                     require_once $file;
-                }
 
                 return;
             }
         }
     }
 
-    add_action( 'wp_loaded', static function (): void {
-        EPM\App::get_instance()->run();
-    } );
+    add_action('wp_loaded', static fn(): void => EphpicMan\Framework\App::getInstance()->run());
 }
 
 /*
@@ -178,9 +121,9 @@ if ( ! class_exists( 'EpmLoader', false ) ) {
  *
  * Example (in the main plugin file):
  *
- * EpmLoader::register(
+ * EphpicManLoader::register(
+ *     __DIR__,
+ *     'EphpicMan\\MyPlugin\\',
  *     '1.4.0',
- *     'Ephpicman\\MyPlugin\\',
- *     __DIR__
  * );
  */
