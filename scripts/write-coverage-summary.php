@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 $repositoryRoot = dirname(__DIR__);
-$coveragePath = $repositoryRoot . '/coverage.xml';
+$coverageDirectory = $repositoryRoot . '/coverage';
+$metadataPath = $coverageDirectory . '/meta.json';
+$coveragePath = $coverageDirectory . '/coverage.jsonl';
 $summaryPath = getenv('GITHUB_STEP_SUMMARY');
 
 if (false === $summaryPath || '' === $summaryPath) {
@@ -11,67 +13,76 @@ if (false === $summaryPath || '' === $summaryPath) {
     exit(1);
 }
 
-if (!is_file($coveragePath)) {
-    fwrite(STDERR, "Coverage report not found: {$coveragePath}\n");
+if (!is_file($metadataPath) || !is_file($coveragePath)) {
+    fwrite(STDERR, "PHPUnit JSONL coverage report is incomplete.\n");
     exit(1);
 }
 
-$coverageXml = simplexml_load_file($coveragePath);
+$metadata = json_decode((string) file_get_contents($metadataPath), true);
 
-if (false === $coverageXml) {
-    fwrite(STDERR, "Unable to parse Clover coverage report.\n");
+if (!is_array($metadata) || true !== ($metadata['branchCoverage'] ?? false)) {
+    fwrite(STDERR, "Branch coverage data was not collected.\n");
     exit(1);
 }
 
-$metricNames = [
-    'statements',
-    'coveredstatements',
-    'conditionals',
-    'coveredconditionals',
+$totalLines = [
+    'executed' => 0,
+    'executable' => 0,
 ];
-$totalMetrics = array_fill_keys($metricNames, 0);
+$totalBranches = [
+    'executed' => 0,
+    'total' => 0,
+];
 $fileMetrics = [];
 
-foreach (($coverageXml->xpath('//file') ?: []) as $fileNode) {
-    $reportedPath = str_replace('\\\\', '/', (string) $fileNode['name']);
-    $marker = '/src/';
-    $markerPosition = strrpos($reportedPath, $marker);
+$coverageFile = new SplFileObject($coveragePath);
 
-    if (false !== $markerPosition) {
-        $relativePath = substr($reportedPath, $markerPosition + strlen($marker));
-    } elseif (0 === strpos($reportedPath, 'src/')) {
-        $relativePath = substr($reportedPath, strlen('src/'));
-    } else {
+while (!$coverageFile->eof()) {
+    $record = trim($coverageFile->fgets());
+
+    if ('' === $record) {
         continue;
     }
 
-    $metrics = array_fill_keys($metricNames, 0);
+    $fileData = json_decode($record, true);
 
-    if (isset($fileNode->metrics)) {
-        foreach ($metricNames as $metric) {
-            $metrics[$metric] = (int) $fileNode->metrics[$metric];
-        }
-    } else {
-        foreach ($fileNode->class as $classNode) {
-            if (!isset($classNode->metrics)) {
-                continue;
-            }
-
-            foreach ($metricNames as $metric) {
-                $metrics[$metric] += (int) $classNode->metrics[$metric];
-            }
-        }
+    if (!is_array($fileData) || !isset($fileData['file'])) {
+        fwrite(STDERR, "Invalid record in PHPUnit JSONL coverage report.\n");
+        exit(1);
     }
 
-    $fileMetrics[$relativePath] = $metrics;
+    $lines = [
+        'executed' => (int) ($fileData['executed'] ?? 0),
+        'executable' => (int) ($fileData['executable'] ?? 0),
+    ];
+    $branches = [
+        'executed' => 0,
+        'total' => 0,
+    ];
 
-    foreach ($metricNames as $metric) {
-        $totalMetrics[$metric] += $metrics[$metric];
+    foreach (($fileData['symbols'] ?? []) as $symbol) {
+        if (!isset($symbol['branches'])) {
+            continue;
+        }
+
+        $branches['executed'] += (int) ($symbol['branches']['executed'] ?? 0);
+        $branches['total'] += (int) ($symbol['branches']['total'] ?? 0);
     }
+
+    $path = (string) $fileData['file'];
+    $fileMetrics[$path] = [
+        'lines' => $lines,
+        'branches' => $branches,
+    ];
+
+    $totalLines['executed'] += $lines['executed'];
+    $totalLines['executable'] += $lines['executable'];
+    $totalBranches['executed'] += $branches['executed'];
+    $totalBranches['total'] += $branches['total'];
 }
 
-if ([] === $fileMetrics || 0 === $totalMetrics['statements']) {
-    fwrite(STDERR, "No usable line coverage metrics found in the Clover report.\n");
+if ([] === $fileMetrics || 0 === $totalLines['executable']) {
+    fwrite(STDERR, "No usable line coverage metrics found in the PHPUnit report.\n");
     exit(1);
 }
 
@@ -92,8 +103,8 @@ $lines = [
     '|---|---:|---:|',
     sprintf(
         '| **Total** | **%s** | **%s** |',
-        $formatCoverage($totalMetrics['coveredstatements'], $totalMetrics['statements']),
-        $formatCoverage($totalMetrics['coveredconditionals'], $totalMetrics['conditionals'])
+        $formatCoverage($totalLines['executed'], $totalLines['executable']),
+        $formatCoverage($totalBranches['executed'], $totalBranches['total'])
     ),
     '',
     '| File | Line Coverage | Branch Coverage |',
@@ -105,13 +116,13 @@ foreach ($fileMetrics as $path => $metrics) {
     $lines[] = sprintf(
         '| `%s` | %s | %s |',
         $escapedPath,
-        $formatCoverage($metrics['coveredstatements'], $metrics['statements']),
-        $formatCoverage($metrics['coveredconditionals'], $metrics['conditionals'])
+        $formatCoverage($metrics['lines']['executed'], $metrics['lines']['executable']),
+        $formatCoverage($metrics['branches']['executed'], $metrics['branches']['total'])
     );
 }
 
 $lines[] = '';
-$lines[] = '<sub>Line coverage is reported by PHPUnit as executable statements. Branch coverage is reported as conditionals. Branch collection requires Xdebug.</sub>';
+$lines[] = '<sub>Line coverage counts executable lines. Branch coverage counts executed basic blocks; both are collected by PHPUnit using Xdebug.</sub>';
 
 if (false === file_put_contents($summaryPath, implode(PHP_EOL, $lines) . PHP_EOL, FILE_APPEND)) {
     fwrite(STDERR, "Unable to write the GitHub Actions job summary.\n");
