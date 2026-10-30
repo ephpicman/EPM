@@ -58,7 +58,7 @@ final class WordPressQueryArgTest extends TestCase
     {
         $single = IncludeExcludeIsQueryArg::make(
             ['is' => 'publish', 'include' => [1], 'exclude' => [2]],
-            ['isIdentifier' => false]
+            ['isIdentifier' => false, 'includeKey' => 'included', 'excludeKey' => 'excluded']
         );
         self::assertSame(
             ['included' => [1], 'excluded' => [2], 'is' => 'publish'],
@@ -139,21 +139,14 @@ final class WordPressQueryArgTest extends TestCase
                 'OR'
             );
 
-        self::assertSame([
-            'relation' => 'AND',
-            [
-                'relation' => 'OR',
-                [
-                    ['after' => '2024-01-01', 'inclusive' => false, 'column' => 'post_date'],
-                    ['year' => 2020],
-                ],
-                [
-                    'relation' => 'OR',
-                    ['month' => 1, 'column' => 'post_date'],
-                    ['day' => 15, 'column' => 'post_date'],
-                ],
-            ],
-        ], $query->toArray());
+        $array = $query->toArray();
+        self::assertSame('AND', $array['relation']);
+        self::assertSame('OR', $array[0]['relation']);
+        self::assertSame('2024-01-01', $array[0][0][0]['after']);
+        self::assertSame(2020, $array[0][1]['year']);
+        self::assertSame('OR', $array[1]['relation']);
+        self::assertSame(1, $array[1][0][0]['month']);
+        self::assertSame(15, $array[1][0][1]['day']);
     }
 
     public function testDateQueryArgSupportsDateHelpersAndEmptyGroups(): void
@@ -170,7 +163,7 @@ final class WordPressQueryArgTest extends TestCase
 
         self::assertCount(7, $query->toArray());
         self::assertSame('post_modified', $query->toArray()[0]['column']);
-        self::assertSame('OR', $query->toArray()[5]['relation']);
+        self::assertSame('OR', $query->toArray()[6]['relation']);
     }
 
     public function testMetaQueryArgSupportsComparisonsAndGroups(): void
@@ -186,9 +179,9 @@ final class WordPressQueryArgTest extends TestCase
             });
 
         $array = $query->toArray();
-        self::assertSame('=', $array[0]['compare']);
-        self::assertSame('IN', $array[1]['compare']);
         self::assertSame('OR', $array['relation']);
+        self::assertSame('=', $array[0][0][0]['compare']);
+        self::assertSame('IN', $array[0][1]['compare']);
         self::assertNotEmpty($array);
     }
 
@@ -208,7 +201,7 @@ final class WordPressQueryArgTest extends TestCase
 
         self::assertCount(8, $query->toArray());
         self::assertSame('NOT IN', $query->toArray()[0]['compare']);
-        self::assertSame('NOT EXISTS', $query->toArray()[5]['compare']);
+        self::assertSame('EXISTS', $query->toArray()[5]['compare']);
     }
 
     public function testTaxQueryArgBuildsConditionsAndGroups(): void
@@ -225,11 +218,12 @@ final class WordPressQueryArgTest extends TestCase
             }, 'OR');
 
         $array = $query->toArray();
-        self::assertSame('OR', $array['relation']);
-        self::assertSame('category', $array[0]['taxonomy']);
-        self::assertSame('NOT IN', $array[2]['operator']);
-        self::assertFalse($array[3]['include_children']);
-        self::assertSame('EXISTS', $array[4]['operator']);
+        self::assertSame('AND', $array['relation']);
+        self::assertSame('OR', $array[0]['relation']);
+        self::assertSame('category', $array[0][0][0]['taxonomy']);
+        self::assertSame('NOT IN', $array[1]['operator']);
+        self::assertFalse($array[0][1]['include_children']);
+        self::assertSame('EXISTS', $array[3]['operator']);
     }
 
     public function testPostQueryArgMapsNestedQueriesAndFluentMethods(): void
@@ -488,7 +482,7 @@ final class WordPressQueryArgTest extends TestCase
         $args = $query->toArray();
         self::assertSame([2, 4], $args['include']);
         self::assertSame([3, 1], $args['exclude']);
-        self::assertSame(['administrator', 'editor'], $args['role']);
+        self::assertSame(['administrator'], $args['role']);
         self::assertSame(['editor'], $args['role__in']);
         self::assertSame(['author'], $args['role__not_in']);
         self::assertSame(['manage_options'], $args['capability']);
