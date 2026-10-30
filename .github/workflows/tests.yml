@@ -79,7 +79,7 @@ jobs:
         run: php scripts/update-coverage.php
 
       - name: Commit COVERAGE.md only when coverage content changed
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           if git diff --quiet -- COVERAGE.md; then
             echo "Coverage report is unchanged; no commit is needed."
