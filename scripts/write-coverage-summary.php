@@ -93,19 +93,26 @@ $formatCoverage = static function (int $covered, int $total): string {
         return 'N/A';
     }
 
-    return sprintf('%d/%d (%.1f%%)', $covered, $total, 100 * $covered / $total);
+    return sprintf('**%.1f%%** (%d/%d)', 100 * $covered / $total, $covered, $total);
 };
 
 $lines = [
     '## Code Coverage',
     '',
-    '| Scope | Line Coverage | Branch Coverage |',
-    '|---|---:|---:|',
+    '### Overall',
+    '',
+    '| Metric | Coverage |',
+    '|---|---:|',
     sprintf(
-        '| **Total** | **%s** | **%s** |',
-        $formatCoverage($totalLines['executed'], $totalLines['executable']),
+        '| Line Coverage | %s |',
+        $formatCoverage($totalLines['executed'], $totalLines['executable'])
+    ),
+    sprintf(
+        '| Branch Coverage | %s |',
         $formatCoverage($totalBranches['executed'], $totalBranches['total'])
     ),
+    '',
+    '### Per-file',
     '',
     '| File | Line Coverage | Branch Coverage |',
     '|---|---:|---:|',
