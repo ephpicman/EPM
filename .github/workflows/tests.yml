@@ -51,3 +51,43 @@ jobs:
 
       - name: Run unit tests
         run: php phpunit.phar --configuration phpunit.xml
+
+  coverage:
+    name: Generate coverage report
+    needs: tests
+    runs-on: ubuntu-latest
+    if: always() && needs.tests.result == 'success'
+    permissions:
+      contents: write
+    steps:
+      - name: Check out Framework
+        uses: actions/checkout@v4
+
+      - name: Set up PHP with PCOV
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          coverage: pcov
+
+      - name: Download PHPUnit 13
+        run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-13.phar --output phpunit.phar
+
+      - name: Generate Clover coverage report
+        run: php phpunit.phar --configuration phpunit.xml --coverage-clover=coverage.xml
+
+      - name: Update generated coverage section
+        run: php scripts/update-coverage.php
+
+      - name: Commit COVERAGE.md only when coverage content changed
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if git diff --quiet -- COVERAGE.md; then
+            echo "Coverage report is unchanged; no commit is needed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add COVERAGE.md
+          git commit -m "Update test coverage report"
+          git push
