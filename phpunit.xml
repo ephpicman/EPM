@@ -12,7 +12,6 @@
     </testsuites>
     <coverage
         includeUncoveredFiles="true"
-        branchCoverage="true"
     />
     <source>
         <include>
