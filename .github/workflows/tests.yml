@@ -73,5 +73,33 @@ jobs:
       - name: Generate JSONL coverage report with branch coverage
         run: php phpunit.phar --configuration phpunit.xml --branch-coverage --coverage-jsonl=coverage
 
+      - name: Inspect PHPUnit JSONL coverage output
+        if: always()
+        run: |
+          echo "=== PHP ==="
+          php --version
+          echo "=== PHPUnit ==="
+          php phpunit.phar --version
+          echo "=== Coverage directory ==="
+          if [ -d coverage ]; then
+            find coverage -maxdepth 2 -type f -printf '%p (%s bytes)\\n' | sort
+          else
+            echo "coverage directory does not exist"
+          fi
+          echo "=== Coverage metadata ==="
+          if [ -f coverage/meta.json ]; then
+            cat coverage/meta.json
+          else
+            echo "coverage/meta.json is missing"
+          fi
+          echo "=== Coverage JSONL preview ==="
+          if [ -f coverage/coverage.jsonl ]; then
+            sed -n '1,5p' coverage/coverage.jsonl
+          else
+            echo "coverage/coverage.jsonl is missing"
+          fi
+          echo "=== Other JSONL files ==="
+          find coverage -maxdepth 1 -type f -name '*.jsonl' -printf '%f (%s bytes)\\n' 2>/dev/null | sort || true
+
       - name: Add coverage report to workflow summary
         run: php scripts/write-coverage-summary.php
