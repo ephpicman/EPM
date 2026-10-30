@@ -66,7 +66,7 @@ jobs:
         with:
           php-version: "8.5"
           coverage: xdebug
-          tools: phpunit:13.4.1
+          tools: phpunit/phpunit:13.4.1
 
       - name: Verify PHPUnit JSONL support
         run: |
