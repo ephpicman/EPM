@@ -67,8 +67,8 @@ jobs:
           php-version: "8.5"
           coverage: xdebug
 
-      - name: Download PHPUnit 13.4
-        run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-13.4.phar --output phpunit.phar
+      - name: Download PHPUnit 13.4.1
+        run: curl --fail --location --silent --show-error https://phar.phpunit.de/phpunit-13.4.1.phar --output phpunit.phar
 
       - name: Verify PHPUnit JSONL support
         run: |
