@@ -67,7 +67,14 @@ jobs:
           php-version: "8.5"
           extensions: dom, mbstring, xml, xmlwriter
           coverage: xdebug
-          tools: phpunit/phpunit:13.4.1
+
+      - name: Install PHPUnit 13
+        run: |
+          mkdir -p "$RUNNER_TEMP/phpunit"
+          cd "$RUNNER_TEMP/phpunit"
+          composer init --no-interaction --name=epm/coverage-tools
+          composer require --no-interaction --no-progress phpunit/phpunit:13.4.1
+          echo "$RUNNER_TEMP/phpunit/vendor/bin" >> "$GITHUB_PATH"
 
       - name: Verify PHPUnit JSONL support
         run: |
