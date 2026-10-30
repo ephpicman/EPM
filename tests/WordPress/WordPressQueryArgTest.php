@@ -64,7 +64,7 @@ final class WordPressQueryArgTest extends TestCase
             ['included' => ['1'], 'excluded' => ['2'], 'is' => 'publish'],
             $single->toArray()
         );
-        self::assertSame([], $single->is('')->toArray());
+        self::assertSame(['included' => ['1'], 'excluded' => ['2']], $single->is('')->toArray());
 
         $multi = IncludeExcludeIsQueryArg::make(
             ['is' => ['editor', '', 'author', 'editor']],
